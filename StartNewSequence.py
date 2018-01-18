@@ -65,11 +65,11 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 		if WattsOrVarsCell[0]=="v": #If it is vars
 			#Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
 			#Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-			print("v")
+			print("WattsOrVars: vars")
 		else:
 			#Set Radian output pulse with Prog Radian ID,1,0,RD phase
 			#Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-			print("w")
+			print("WattsOrVars: watt")
 		if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
 			#Output to HP3488A_V with "CRESET 4", term.=LF
 			time.sleep(1)
@@ -80,10 +80,10 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 		ws.cell(row=ActiveRow,column=27,value=dateTime) #Set the time and date in Excel sheet.
 		ws.cell(row=3,column=42,value=RowNumber) #Set the Row Number in Excel sheet.
 		setPower(ws) #Execute Set Power function.
-		print(DividerRange)
-		print(Shunt)
-		print(CTRatio)
-		print(HEGFreq)
+		print("DividerRange: "+str(DividerRange))
+		print("Shunt: "+str(Shunt))
+		print("CTRatio: "+str(CTRatio))
+		print("HEGFreq: "+str(HEGFreq))
 		Finished=1 #For testing purposes. Remove when not needed.
 def initialiseRadian():
 	pass
@@ -93,3 +93,30 @@ def setPower(ws):
 	Shunt = ws.cell(row=ActiveRow,column=7).value #Set the Shunt cell value from Excel sheet
 	CTRatio = ws.cell(row=ActiveRow,column=8).value #Set the CT ratio cell from Excel sheet
 	HEGFreq = ws.cell(row=ActiveRow,column=9).value #Set the Set frequency cell from Excel sheet
+	# Open RS232 6 WB
+	# Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	if DividerRange==60:
+		#Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
+		print("DividerRange is 60")
+	else:
+		#Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
+		print("DividerRange is not 60")
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	# Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
+	# Close RS232 6 WB
+	time.sleep(0.5) #Delay for 0.5 seconds
