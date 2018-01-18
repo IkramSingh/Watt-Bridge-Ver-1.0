@@ -117,6 +117,7 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 		time.sleep(3) #Delay for 3 seconds
 		#Output to HP3478A_V with "T3", term.=LF
 		#Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
+		#Set remote Excel link item Temperature Cell to HP3478A_V
 		
 		Finished=1 #For testing purposes. Remove when not needed.
 def initialiseRadian():
