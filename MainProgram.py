@@ -27,7 +27,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
 	
 	def StartNewSequenceOnButtonClick( self, event ):
 		'''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''
-		StartNewSequence.startNewSequence(frame,self.eventsLog.EventsLog,self.ws)
+		StartNewSequence.startNewSequence(frame,self.eventsLog.EventsLog,self.ws) #Start of startNewSequence in StartNewSequence.py
 		self.eventsLog.EventsLog.AppendText("Saving Spreadsheet...\n") #Inform the user.
 		self.wb.template=False #Make sure Excel file is saved as document not template
 		self.wb.save(self.filename) #Save file with same name
@@ -35,7 +35,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
 		
 	def setupSpreadsheet(self):
 		'''Creates a link between the software and Excel sheet.'''
-		self.eventsLog.EventsLog.AppendText("Setting Up Spreadsheet...\n") #Inform the user.
+		self.eventsLog.EventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
 		#Location of Excel file
 		self.filename="Book1.xlsx"
 		self.wb=load_workbook(self.filename) #Open Excel file
