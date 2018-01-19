@@ -34,90 +34,115 @@ Finished=0
 DCVRange=0
 ActiveRow=0
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
-	'''The core of the software. Contains all of the commands and function execution commands that performs
-	all of the necessary measurements and calculations.'''
-	global DCVRange,WCount,WSign,VCount,VSign,ReadingNumber,ActiveRow,RowNumber,SourceType
-	global NumberOfReadings,Finished
-	RowNumber=rowNumber
-	wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
-	initialiseRadian() #Run Initialise Radian function. Must add later
-	time.sleep(1) #Delay for 1 second
-	Finished = 0 #End of process?
-	while(Finished==0):
-		updateGUI(wattBridgeGUI) #Reupdate variables shown in main GUI.
-		WCount=0 #Clear all W and V variables.
-		WSign=0
-		VCount=0
-		VSign=0
-		if wattBridgeGUI.SetDMMRangeRefVolts.GetCurrentSelection()==0: #Less than 0.7 V rms
-			DCVRange=1
-		elif wattBridgeGUI.SetDMMRangeRefVolts.GetCurrentSelection()==1: #Less than 7.0 V rms
-			DCVRange=10
-		wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
-		ReadingNumber=1
-		wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
-		ActiveRow=rowNumber
-		Phase123Cell = ws.cell(row=ActiveRow,column=16).value #Obtain phase value from Excel sheet
-		if Phase123Cell==123 or Phase123Cell==0:
-			RDPhase=0
-		else:
-			RDPhase=Phase123Cell
-		WattsOrVarsCell = str(ws.cell(row=ActiveRow,column=13).value)#Obtain watts/vars value from Excel sheet
-		if WattsOrVarsCell[0]=="v": #If it is vars
-			#Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
-			#Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-			print("WattsOrVars: vars")
-		else:
-			#Set Radian output pulse with Prog Radian ID,1,0,RD phase
-			#Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-			print("WattsOrVars: watt")
-		if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
-			#Output to HP3488A_V with "CRESET 4", term.=LF
-			time.sleep(1)
-			#Output to HP3488A_V with "CLOSE 404", term.=LF
-			time.sleep(1)
-			eventsLog.AppendText("Shunt Volts Test on \n")
-		dateTime = str(time.asctime())
-		ws.cell(row=ActiveRow,column=27,value=dateTime) #Set the time and date in Excel sheet.
-		ws.cell(row=3,column=42,value=RowNumber) #Set the Row Number in Excel sheet.
-		setPower(ws) #Execute Set Power function.
-		print("DividerRange: "+str(DividerRange))
-		print("Shunt: "+str(Shunt))
-		print("CTRatio: "+str(CTRatio))
-		print("HEGFreq: "+str(HEGFreq))
-		SourceType = ws.cell(row=ActiveRow,column=2).value #Get the Source Type from Excel sheet.
-		print("SourceType: "+str(SourceType))
-		if SourceType=="FLUKE" or SourceType=="FLUHIGH":
-			print("FLUKE")
-			#Execute Power Fluke
-		elif SourceType=="CH":
-			print("CH5500")
-			#Execute CH5500
-		elif SourceType=="HEG":
-			#Execute PL10
-			print("PL10")
-		else:
-			print("SourceType selected in Excel file doesnt exist.")
-		ActiveRow=7 #Set ActiveRow to 7.
-		wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
-		#Execute Find Dial Settings
-		#Execute Refine Dial Settings
-		ActiveRow=RowNumber
-		#Execute Load Dial Settings
-		NumberOfReadings = ws.cell(row=ActiveRow,column=11).value #Get the Number of Readings value from Excel sheet.
-		print("NumberOfReadings: " + str(NumberOfReadings))
-		if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
-			#Execute Test
-			print("Test")
-		#Output to HP3478A_V with "F4RAN5Z1", term.=LF
-		time.sleep(3) #Delay for 3 seconds
-		#Output to HP3478A_V with "T3", term.=LF
-		#Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
-		#Set remote Excel link item Temperature Cell to HP3478A_V
-		wsRS31Data.cell(row=ActiveRow,column=1,value=ActiveRow) #Set Row number cell in "RD31 Data" sheet to Active Row value
-		Finished=1 #For testing purposes. Remove when not needed.
-                wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
-                wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
+    '''The core of the software. Contains all of the commands and function execution commands that performs
+    all of the necessary measurements and calculations.'''
+    global DCVRange,WCount,WSign,VCount,VSign,ReadingNumber,ActiveRow,RowNumber,SourceType
+    global NumberOfReadings,Finished,ReadingNumber
+    RowNumber=rowNumber
+    wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
+    initialiseRadian() #Run Initialise Radian function. Must add later
+    time.sleep(1) #Delay for 1 second
+    Finished = 0 #End of process?
+    while(Finished==0):
+        updateGUI(wattBridgeGUI) #Reupdate variables shown in main GUI.
+        WCount=0 #Clear all W and V variables.
+        WSign=0
+        VCount=0
+        VSign=0
+        if wattBridgeGUI.SetDMMRangeRefVolts.GetCurrentSelection()==0: #Less than 0.7 V rms
+            DCVRange=1
+        elif wattBridgeGUI.SetDMMRangeRefVolts.GetCurrentSelection()==1: #Less than 7.0 V rms
+            DCVRange=10
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
+        ReadingNumber=1
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
+        ActiveRow=rowNumber
+        Phase123Cell = ws.cell(row=ActiveRow,column=16).value #Obtain phase value from Excel sheet
+        if Phase123Cell==123 or Phase123Cell==0:
+            RDPhase=0
+        else:
+            RDPhase=Phase123Cell
+        WattsOrVarsCell = str(ws.cell(row=ActiveRow,column=13).value)#Obtain watts/vars value from Excel sheet
+        if WattsOrVarsCell[0]=="v": #If it is vars
+            #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
+            #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            print("WattsOrVars: vars")
+        else:
+            #Set Radian output pulse with Prog Radian ID,1,0,RD phase
+            #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            print("WattsOrVars: watt")
+        if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
+            #Output to HP3488A_V with "CRESET 4", term.=LF
+            time.sleep(1)
+            #Output to HP3488A_V with "CLOSE 404", term.=LF
+            time.sleep(1)
+            eventsLog.AppendText("Shunt Volts Test on \n")
+        dateTime = str(time.asctime())
+        ws.cell(row=ActiveRow,column=27,value=dateTime) #Set the time and date in Excel sheet.
+        ws.cell(row=3,column=42,value=RowNumber) #Set the Row Number in Excel sheet.
+        setPower(ws) #Execute Set Power function.
+        print("DividerRange: "+str(DividerRange))
+        print("Shunt: "+str(Shunt))
+        print("CTRatio: "+str(CTRatio))
+        print("HEGFreq: "+str(HEGFreq))
+        SourceType = ws.cell(row=ActiveRow,column=2).value #Get the Source Type from Excel sheet.
+        print("SourceType: "+str(SourceType))
+        if SourceType=="FLUKE" or SourceType=="FLUHIGH":
+            print("FLUKE")
+            #Execute Power Fluke
+        elif SourceType=="CH":
+            print("CH5500")
+            #Execute CH5500
+        elif SourceType=="HEG":
+            #Execute PL10
+            print("PL10")
+        else:
+            print("SourceType selected in Excel file doesnt exist.")
+        ActiveRow=7 #Set ActiveRow to 7.
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
+        #Execute Find Dial Settings
+        #Execute Refine Dial Settings
+        ActiveRow=RowNumber
+        #Execute Load Dial Settings
+        NumberOfReadings = ws.cell(row=ActiveRow,column=11).value #Get the Number of Readings value from Excel sheet.
+        print("NumberOfReadings: " + str(NumberOfReadings))
+        if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
+            #Execute Test
+            print("Test")
+        #Output to HP3478A_V with "F4RAN5Z1", term.=LF
+        time.sleep(3) #Delay for 3 seconds
+        #Output to HP3478A_V with "T3", term.=LF
+        #Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
+        #Set remote Excel link item Temperature Cell to HP3478A_V
+        wsRS31Data.cell(row=ActiveRow,column=1,value=ActiveRow) #Set Row number cell in "RD31 Data" sheet to Active Row value
+        for ReadingsLoop in range(NumberOfReadings):
+            ReadingNumber=ReadingsLoop
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Doing Reading "+str(ReadingsLoop+1)+" \n") #Update event log.
+            ActiveRow=RowNumber
+            time.sleep(0.5) #Delay for 0.5 seconds
+            #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            time.sleep(0.5) #Delay for 0.5 seconds
+            Ch1GateTimeCell = ws.cell(row=ActiveRow,column=10).value #Get Ch1 gate time cell value from Excel file.
+            if Ch1GateTimeCell>0.1:
+                if wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
+                    #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
+                    #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 1'", term.=LF
+                    #Output to Ag53230A_V with ":INIT", term.=LF
+                    print("Counter chosen is 53230A")
+                elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
+                    #Output to HP3131A_V with ":sens:freq:arm:stop:tim " , Excel link, term.=LF
+                    #Output to HP3131A_V with ":func 'freq 1'", term.=LF
+                    #Output to HP3131A_V with "init", term.=LF
+                    print("Counter chosen is 3131A")
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
+        Finished=1 #For testing purposes. Remove when not needed.
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
 	pass
 def setPower(ws):
