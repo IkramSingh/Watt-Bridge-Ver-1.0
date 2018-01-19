@@ -17,7 +17,7 @@ import wx.xrc
 class WattBridgeSoftware ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 568,588 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		
@@ -154,7 +154,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.Ch1TrigLevel = wx.StaticText( self, wx.ID_ANY, u"Ch 1 Trig Level", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.Ch1TrigLevel.Wrap( -1 )
-		fgSizer6.Add( self.Ch1TrigLevel, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.Ch1TrigLevel, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		Ch1TrigLevelChoices = [ u"TTL (3 V)", u"6 V" ]
 		self.Ch1TrigLevel = wx.ComboBox( self, wx.ID_ANY, u"TTL (3 V)", wx.DefaultPosition, wx.DefaultSize, Ch1TrigLevelChoices, 0 )
@@ -163,7 +163,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.Ch2TrigLevel = wx.StaticText( self, wx.ID_ANY, u"Ch 2 Trig Level", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.Ch2TrigLevel.Wrap( -1 )
-		fgSizer6.Add( self.Ch2TrigLevel, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.Ch2TrigLevel, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		Ch2TrigLevelChoices = [ u"TTL (3 V)", u"6 V" ]
 		self.Ch2TrigLevel = wx.ComboBox( self, wx.ID_ANY, u"TTL (3 V)", wx.DefaultPosition, wx.DefaultSize, Ch2TrigLevelChoices, 0 )
@@ -172,7 +172,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.SelectCounter = wx.StaticText( self, wx.ID_ANY, u"Select Counter", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.SelectCounter.Wrap( -1 )
-		fgSizer6.Add( self.SelectCounter, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.SelectCounter, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		SelectCounterChoices = [ u"53230A", u"53131A" ]
 		self.SelectCounter = wx.ComboBox( self, wx.ID_ANY, u"53230A", wx.DefaultPosition, wx.DefaultSize, SelectCounterChoices, 0 )
@@ -181,7 +181,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.Output1 = wx.StaticText( self, wx.ID_ANY, u"52120 Output", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.Output1.Wrap( -1 )
-		fgSizer6.Add( self.Output1, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.Output1, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		Output1Choices = [ u"Auto", u"High Current" ]
 		self.Output1 = wx.ComboBox( self, wx.ID_ANY, u"High Current", wx.DefaultPosition, wx.DefaultSize, Output1Choices, 0 )
@@ -190,7 +190,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.SetDMMRangeRefVolts = wx.StaticText( self, wx.ID_ANY, u"Set DMM Range: Ref Volts", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.SetDMMRangeRefVolts.Wrap( -1 )
-		fgSizer6.Add( self.SetDMMRangeRefVolts, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.SetDMMRangeRefVolts, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		SetDMMRangeRefVoltsChoices = [ u"Less than 0.7 V rms", u"Less than 7.0 V rms" ]
 		self.SetDMMRangeRefVolts = wx.ComboBox( self, wx.ID_ANY, u"Less than 7.0 V rms", wx.DefaultPosition, wx.DefaultSize, SetDMMRangeRefVoltsChoices, 0 )
@@ -210,8 +210,8 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.ContinueSequence = wx.Button( self, wx.ID_ANY, u"Continue Sequence (from \"Current Row\")", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer7.Add( self.ContinueSequence, 0, wx.ALL, 5 )
 		
-		self.Setup = wx.Button( self, wx.ID_ANY, u"Set Up Instruments / Initialize", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer7.Add( self.Setup, 0, wx.ALL, 5 )
+		self.SaveData = wx.Button( self, wx.ID_ANY, u"Save Data", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer7.Add( self.SaveData, 0, wx.ALL, 5 )
 		
 		self.MakeSafe = wx.Button( self, wx.ID_ANY, u"Make Safe", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer7.Add( self.MakeSafe, 0, wx.ALL, 5 )
@@ -221,6 +221,20 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		
 		fgSizer1.Add( fgSizer7, 1, wx.EXPAND, 5 )
+		
+		fgSizer10 = wx.FlexGridSizer( 0, 1, 0, 0 )
+		fgSizer10.SetFlexibleDirection( wx.BOTH )
+		fgSizer10.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.WattBridgeEventsLog = wx.StaticText( self, wx.ID_ANY, u"Watt Bridge Events Log", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.WattBridgeEventsLog.Wrap( -1 )
+		fgSizer10.Add( self.WattBridgeEventsLog, 0, wx.ALL, 5 )
+		
+		self.WattBridgeEventsLog = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 400,170 ), wx.TE_MULTILINE )
+		fgSizer10.Add( self.WattBridgeEventsLog, 0, wx.ALL, 5 )
+		
+		
+		fgSizer1.Add( fgSizer10, 1, wx.EXPAND, 5 )
 		
 		
 		self.SetSizer( fgSizer1 )
@@ -241,7 +255,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.Bind( wx.EVT_CLOSE, self.WattBridgeSoftwareOnClose )
 		self.StartNewSequence.Bind( wx.EVT_BUTTON, self.StartNewSequenceOnButtonClick )
 		self.ContinueSequence.Bind( wx.EVT_BUTTON, self.ContinueSequenceOnButtonClick )
-		self.Setup.Bind( wx.EVT_BUTTON, self.SetupOnButtonClick )
+		self.SaveData.Bind( wx.EVT_BUTTON, self.SaveDataOnButtonClick )
 		self.MakeSafe.Bind( wx.EVT_BUTTON, self.MakeSafeOnButtonClick )
 		self.CheckConnections.Bind( wx.EVT_BUTTON, self.CheckConnectionsOnButtonClick )
 		self.Bind( wx.EVT_MENU, self.AboutOnMenuSelection, id = self.About.GetId() )
@@ -260,7 +274,7 @@ class WattBridgeSoftware ( wx.Frame ):
 	def ContinueSequenceOnButtonClick( self, event ):
 		event.Skip()
 	
-	def SetupOnButtonClick( self, event ):
+	def SaveDataOnButtonClick( self, event ):
 		event.Skip()
 	
 	def MakeSafeOnButtonClick( self, event ):
@@ -271,36 +285,6 @@ class WattBridgeSoftware ( wx.Frame ):
 	
 	def AboutOnMenuSelection( self, event ):
 		event.Skip()
-	
-
-###########################################################################
-## Class WattBridgeEventsLog
-###########################################################################
-
-class WattBridgeEventsLog ( wx.Frame ):
-	
-	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Events Log", pos = wx.DefaultPosition, size = wx.Size( 520,388 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
-		
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
-		
-		fgSizer6 = wx.FlexGridSizer( 0, 2, 0, 0 )
-		fgSizer6.SetFlexibleDirection( wx.BOTH )
-		fgSizer6.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
-		
-		self.EventsLog = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 500,350 ), wx.TE_MULTILINE )
-		self.EventsLog.Enable( False )
-		
-		fgSizer6.Add( self.EventsLog, 0, wx.ALL, 5 )
-		
-		
-		self.SetSizer( fgSizer6 )
-		self.Layout()
-		
-		self.Centre( wx.BOTH )
-	
-	def __del__( self ):
-		pass
 	
 
 ###########################################################################

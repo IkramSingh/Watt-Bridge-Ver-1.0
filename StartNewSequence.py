@@ -1,7 +1,9 @@
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import time
+import threading
 
+completedStartNewSequence=0
 #-----Global Variables used by the Watt Bridge Software-----#
 flukeError=0
 FlukeErrorNumber=0
@@ -26,29 +28,23 @@ WCount=0
 WSign=0
 VCount=0
 VSign=0
+Finished=0
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
 ActiveRow=0
-	
-def startNewSequence(wattBridgeGUI,eventsLog,ws):
-	'''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
-	Leads onto continueSequence function.'''
-	rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
-	continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws)
-
-def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
+def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
 	'''The core of the software. Contains all of the commands and function execution commands that performs
 	all of the necessary measurements and calculations.'''
 	global DCVRange,WCount,WSign,VCount,VSign,ReadingNumber,ActiveRow,RowNumber,SourceType
-	global NumberOfReadings
+	global NumberOfReadings,Finished
 	RowNumber=rowNumber
-	eventsLog.AppendText("Initiating Radian \n") #Update event log.
+	wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
 	initialiseRadian() #Run Initialise Radian function. Must add later
 	time.sleep(1) #Delay for 1 second
 	Finished = 0 #End of process?
 	while(Finished==0):
-		wattBridgeGUI.CurrentRow.SetValue(RowNumber) #Show current Row in Excel file in main GUI to user.
+		updateGUI(wattBridgeGUI) #Reupdate variables shown in main GUI.
 		WCount=0 #Clear all W and V variables.
 		WSign=0
 		VCount=0
@@ -57,9 +53,9 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 			DCVRange=1
 		elif wattBridgeGUI.SetDMMRangeRefVolts.GetCurrentSelection()==1: #Less than 7.0 V rms
 			DCVRange=10
-		eventsLog.AppendText("Reading: _ \n") #Update event log.
+		wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
 		ReadingNumber=1
-		eventsLog.AppendText("Applying Power \n") #Update event log.
+		wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
 		ActiveRow=rowNumber
 		Phase123Cell = ws.cell(row=ActiveRow,column=16).value #Obtain phase value from Excel sheet
 		if Phase123Cell==123 or Phase123Cell==0:
@@ -103,7 +99,7 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 		else:
 			print("SourceType selected in Excel file doesnt exist.")
 		ActiveRow=7 #Set ActiveRow to 7.
-		eventsLog.AppendText("Finding Dial Settings \n") #Update event log.
+		wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
 		#Execute Find Dial Settings
 		#Execute Refine Dial Settings
 		ActiveRow=RowNumber
@@ -118,42 +114,59 @@ def continueSequence(wattBridgeGUI,eventsLog,rowNumber,ws):
 		#Output to HP3478A_V with "T3", term.=LF
 		#Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
 		#Set remote Excel link item Temperature Cell to HP3478A_V
-		
+		wsRS31Data.cell(row=ActiveRow,column=1,value=ActiveRow) #Set Row number cell in "RD31 Data" sheet to Active Row value
 		Finished=1 #For testing purposes. Remove when not needed.
+                wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
+                wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
 	pass
 def setPower(ws):
-	'''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
-	various commands to the "RS232 6 WB".'''
-	global DividerRange,Shunt,CTRatio,HEGFreq
-	DividerRange = ws.cell(row=ActiveRow,column=6).value #Get the Divider Range cell value from Excel sheet
-	Shunt = ws.cell(row=ActiveRow,column=7).value #Get the Shunt cell value from Excel sheet
-	CTRatio = ws.cell(row=ActiveRow,column=8).value #Get the CT ratio cell from Excel sheet
-	HEGFreq = ws.cell(row=ActiveRow,column=9).value #Get the Set frequency cell from Excel sheet
-	# Open RS232 6 WB
-	# Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	if DividerRange==60:
-		#Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
-		print("DividerRange is 60")
-	else:
-		#Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
-		print("DividerRange is not 60")
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	# Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
-	# Close RS232 6 WB
-	time.sleep(0.5) #Delay for 0.5 seconds
+    '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
+    various commands to the "RS232 6 WB".'''
+    global DividerRange,Shunt,CTRatio,HEGFreq
+    DividerRange = ws.cell(row=ActiveRow,column=6).value #Get the Divider Range cell value from Excel sheet
+    Shunt = ws.cell(row=ActiveRow,column=7).value #Get the Shunt cell value from Excel sheet
+    CTRatio = ws.cell(row=ActiveRow,column=8).value #Get the CT ratio cell from Excel sheet
+    HEGFreq = ws.cell(row=ActiveRow,column=9).value #Get the Set frequency cell from Excel sheet
+    # Open RS232 6 WB
+    # Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    if DividerRange==60:
+        #Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
+        print("DividerRange is 60")
+    else:
+        #Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
+        print("DividerRange is not 60")
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    # Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
+    # Close RS232 6 WB
+    time.sleep(0.5) #Delay for 0.5 seconds
+def updateGUI(wattBridgeGUI):
+    '''Updates the values shown in the main GUI.'''
+    wattBridgeGUI.CurrentRow.SetValue(RowNumber) #Show current Row in Excel file in main GUI to user.
+    print("GUI updated")
+def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
+    global RowNumber
+    '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
+    Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
+    functions are executing simultaneously for the user.'''
+    rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
+    RowNumber=rowNumber 
+    t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,))
+    t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
+    t1.start()
+    t2.start()
