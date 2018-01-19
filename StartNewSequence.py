@@ -2,6 +2,7 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 import time
 import threading
+import SwerleinFreq
 
 completedStartNewSequence=0
 #-----Global Variables used by the Watt Bridge Software-----#
@@ -29,6 +30,10 @@ WSign=0
 VCount=0
 VSign=0
 Finished=0
+ACVoltsRms=0
+UncalFreqy=0
+FFTVolts=0
+FFTPhase=0
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
@@ -37,7 +42,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
     global DCVRange,WCount,WSign,VCount,VSign,ReadingNumber,ActiveRow,RowNumber,SourceType
-    global NumberOfReadings,Finished,ReadingNumber
+    global NumberOfReadings,Finished,ReadingNumber,ACVoltsRms,UncalFreqy,FFTVolts,FFTPhase
     RowNumber=rowNumber
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
     initialiseRadian() #Run Initialise Radian function. Must add later
@@ -116,8 +121,8 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         #Set remote Excel link item Temperature Cell to HP3478A_V
         wsRS31Data.cell(row=ActiveRow,column=1,value=ActiveRow) #Set Row number cell in "RD31 Data" sheet to Active Row value
         for ReadingsLoop in range(NumberOfReadings):
-            ReadingNumber=ReadingsLoop
-            wattBridgeGUI.WattBridgeEventsLog.AppendText("Doing Reading "+str(ReadingsLoop+1)+" \n") #Update event log.
+            ReadingNumber=ReadingsLoop+1
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Doing Reading "+str(ReadingNumber)+" \n") #Update event log.
             ActiveRow=RowNumber
             time.sleep(0.5) #Delay for 0.5 seconds
             #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
@@ -140,6 +145,26 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
+            SwerleinFreq.OnStart() #Create a comunication link between Swerlein and 3458A.
+            ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
+            ws.cell(row=ActiveRow,column=35+7*(ReadingNumber-1),value=ACVoltsRms) #Set the Ac volts rms value in Excel sheet.
+            UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+            ws.cell(row=ActiveRow,column=28,value=UncalFreqy) #Set the exact frequency value in Excel sheet.
+            #Execute Set Up FFT Function
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
+            #Execute FFT Volts & Phase function
+            ws.cell(row=ActiveRow,column=36+7*(ReadingNumber-1),value=FFTVolts) #Set the FFT ref volts value in Excel sheet.
+            ws.cell(row=ActiveRow,column=37+7*(ReadingNumber-1),value=FFTPhase) #Set the FFT ref phase value in Excel sheet.
+            #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
+            #Close RS232 6 WB
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
+            #Execute FFT Volts & Phase function
+            ws.cell(row=ActiveRow,column=33+7*(ReadingNumber-1),value=FFTVolts) #Set the Det volts value in Excel sheet.
+            ws.cell(row=ActiveRow,column=34+7*(ReadingNumber-1),value=FFTPhase) #Set the Det phase value in Excel sheet.
         Finished=1 #For testing purposes. Remove when not needed.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
