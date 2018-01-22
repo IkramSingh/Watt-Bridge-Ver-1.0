@@ -2,7 +2,7 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 import time
 import threading
-import SwerleinFreq
+#import SwerleinFreq
 
 completedStartNewSequence=0
 #-----Global Variables used by the Watt Bridge Software-----#
@@ -38,6 +38,27 @@ FFTPhase=0
 #Temporary variables. To be checked later
 DCVRange=0
 ActiveRow=0
+def getExcelColumn(column):
+    if column==35:
+        return 'AI'
+    if column==36:
+        return 'AJ'
+    if column==37:
+        return 'AK'
+    if column==33:
+        return 'AG'
+    if column==34:
+        return 'AH'
+    if column==42:
+        return 'AP'
+    if column==43:
+        return 'AQ'
+    if column==44:
+        return 'AR'
+    if column==40:
+        return 'AN'
+    if column==41:
+        return 'AO'
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -62,17 +83,17 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         ReadingNumber=1
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
         ActiveRow=rowNumber
-        Phase123Cell = ws.cell(row=ActiveRow,column=16).value #Obtain phase value from Excel sheet
+        Phase123Cell = ws['P'+str(ActiveRow)].value #Obtain phase value from Excel sheet
         if Phase123Cell==123 or Phase123Cell==0:
             RDPhase=0
         else:
             RDPhase=Phase123Cell
-        WattsOrVarsCell = str(ws.cell(row=ActiveRow,column=13).value)#Obtain watts/vars value from Excel sheet
+        WattsOrVarsCell = str(ws['M'+str(ActiveRow)].value)#Obtain watts/vars value from Excel sheet
         if WattsOrVarsCell[0]=="v": #If it is vars
             #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
             #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
             print("WattsOrVars: vars")
-        else:
+        elif WattsOrVarsCell[0]=="w": #If it is watts
             #Set Radian output pulse with Prog Radian ID,1,0,RD phase
             #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
             print("WattsOrVars: watt")
@@ -83,14 +104,14 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             time.sleep(1)
             eventsLog.AppendText("Shunt Volts Test on \n")
         dateTime = str(time.asctime())
-        ws.cell(row=ActiveRow,column=27,value=dateTime) #Set the time and date in Excel sheet.
-        ws.cell(row=3,column=42,value=RowNumber) #Set the Row Number in Excel sheet.
+        ws['AA'+str(ActiveRow)]=dateTime #Set the time and date in Excel sheet.
+        ws['AP3']=RowNumber #Set the Row Number in Excel sheet.
         setPower(ws) #Execute Set Power function.
         print("DividerRange: "+str(DividerRange))
         print("Shunt: "+str(Shunt))
         print("CTRatio: "+str(CTRatio))
         print("HEGFreq: "+str(HEGFreq))
-        SourceType = ws.cell(row=ActiveRow,column=2).value #Get the Source Type from Excel sheet.
+        SourceType = ws['B'+str(ActiveRow)].value #Get the Source Type from Excel sheet.
         print("SourceType: "+str(SourceType))
         if SourceType=="FLUKE" or SourceType=="FLUHIGH":
             print("FLUKE")
@@ -109,7 +130,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         #Execute Refine Dial Settings
         ActiveRow=RowNumber
         #Execute Load Dial Settings
-        NumberOfReadings = ws.cell(row=ActiveRow,column=11).value #Get the Number of Readings value from Excel sheet.
+        NumberOfReadings = ws['K'+str(ActiveRow)].value #Get the Number of Readings value from Excel sheet.
         print("NumberOfReadings: " + str(NumberOfReadings))
         if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
             #Execute Test
@@ -119,7 +140,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         #Output to HP3478A_V with "T3", term.=LF
         #Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
         #Set remote Excel link item Temperature Cell to HP3478A_V
-        wsRS31Data.cell(row=ActiveRow,column=1,value=ActiveRow) #Set Row number cell in "RD31 Data" sheet to Active Row value
+        wsRS31Data['A'+str(ActiveRow)]=ActiveRow #Set Row number cell in "RD31 Data" sheet to Active Row value
         for ReadingsLoop in range(NumberOfReadings):
             ReadingNumber=ReadingsLoop+1
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Doing Reading "+str(ReadingNumber)+" \n") #Update event log.
@@ -132,7 +153,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             time.sleep(0.5) #Delay for 0.5 seconds
-            Ch1GateTimeCell = ws.cell(row=ActiveRow,column=10).value #Get Ch1 gate time cell value from Excel file.
+            Ch1GateTimeCell = ws['J'+str(ActiveRow)].value #Get Ch1 gate time cell value from Excel file.
             if Ch1GateTimeCell>0.1:
                 if wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
                     #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
@@ -145,26 +166,28 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
-            SwerleinFreq.OnStart() #Create a comunication link between Swerlein and 3458A.
-            ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
-            ws.cell(row=ActiveRow,column=35+7*(ReadingNumber-1),value=ACVoltsRms) #Set the Ac volts rms value in Excel sheet.
-            UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
-            ws.cell(row=ActiveRow,column=28,value=UncalFreqy) #Set the exact frequency value in Excel sheet.
+            #SwerleinFreq.OnStart() #Create a comunication link between Swerlein and 3458A.
+            ACVoltsRms = "Testing"#SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
+            ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)]=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
+            UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+            ws['AB'+str(ActiveRow)]=UncalFreqy #Set the exact frequency value in Excel sheet.
             #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
             #Execute FFT Volts & Phase function
-            ws.cell(row=ActiveRow,column=36+7*(ReadingNumber-1),value=FFTVolts) #Set the FFT ref volts value in Excel sheet.
-            ws.cell(row=ActiveRow,column=37+7*(ReadingNumber-1),value=FFTPhase) #Set the FFT ref phase value in Excel sheet.
+            FFTVolts="Testing"
+            FFTPhase="Testing"
+            ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
+            ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the FFT ref phase value in Excel sheet.
             #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
-            #Close RS232 6 WB
+                #Close RS232 6 WB
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
             #Execute FFT Volts & Phase function
-            ws.cell(row=ActiveRow,column=33+7*(ReadingNumber-1),value=FFTVolts) #Set the Det volts value in Excel sheet.
-            ws.cell(row=ActiveRow,column=34+7*(ReadingNumber-1),value=FFTPhase) #Set the Det phase value in Excel sheet.
+            ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
+            ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
         Finished=1 #For testing purposes. Remove when not needed.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
@@ -174,10 +197,10 @@ def setPower(ws):
     '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
     various commands to the "RS232 6 WB".'''
     global DividerRange,Shunt,CTRatio,HEGFreq
-    DividerRange = ws.cell(row=ActiveRow,column=6).value #Get the Divider Range cell value from Excel sheet
-    Shunt = ws.cell(row=ActiveRow,column=7).value #Get the Shunt cell value from Excel sheet
-    CTRatio = ws.cell(row=ActiveRow,column=8).value #Get the CT ratio cell from Excel sheet
-    HEGFreq = ws.cell(row=ActiveRow,column=9).value #Get the Set frequency cell from Excel sheet
+    DividerRange = ws['F'+str(ActiveRow)].value #Get the Divider Range cell value from Excel sheet
+    Shunt = ws['G'+str(ActiveRow)].value #Get the Shunt cell value from Excel sheet
+    CTRatio = ws['H'+str(ActiveRow)].value #Get the CT ratio cell from Excel sheet
+    HEGFreq = ws['I'+str(ActiveRow)].value #Get the Set frequency cell from Excel sheet
     # Open RS232 6 WB
     # Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
     # Close RS232 6 WB
@@ -215,7 +238,7 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
     functions are executing simultaneously for the user.'''
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
-    RowNumber=rowNumber 
+    RowNumber = rowNumber
     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,))
     t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
     t1.start()
