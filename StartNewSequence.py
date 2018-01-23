@@ -59,6 +59,14 @@ def getExcelColumn(column):
         return 'AN'
     if column==41:
         return 'AO'
+    if column==38:
+        return 'AL'
+    if column==45:
+        return 'AS'
+    if column==39:
+        return 'AM'
+    if column==46:
+        return 'AT'
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -188,7 +196,75 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
             ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
-        Finished=1 #For testing purposes. Remove when not needed.
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Read RD31 \n") #Update event log.
+            #Execute Read Radian2 function.
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Counter \n") #Update event log.
+            GateTime = Ch1GateTimeCell
+            if GateTime>0.1:
+                if wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
+                    #Output to HP3131A_V with "fetc?", term.=LF
+                    time.sleep(0.25) #Delay for 0.25 seconds
+                    #Enter from HP3131A_V up to 256 bytes, stop on EOS=LF
+                    HP3131A_V="Testing"
+                    ws[getExcelColumn(38+7*(ReadingNumber-1))+str(ActiveRow)]=HP3131A_V
+                elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
+                    #Output to Ag53230A_V with "fetc?", term.=LF
+                    time.sleep(0.25) #Delay for 0.25 seconds
+                    #Enter from Ag53230A_V up to 256 bytes, stop on EOS=LF
+                    Ag53230A_V="Testing"
+                    ws[getExcelColumn(38+7*(ReadingNumber-1))+str(ActiveRow)]=Ag53230A_V
+                if wattBridgeGUI.CounterChannel.GetCurrentSelection()==0:
+                    if wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
+                        #Output to HP3131A_V with ":sens:freq:arm:stop:tim " , Excel link, term.=LF
+                        #Output to HP3131A_V with ":func 'freq 2'", term.=LF
+                        #Output to HP3131A_V with ":read?", term.=LF
+                        time.sleep(2) #Delay for 2 seconds
+                        #Enter from HP3131A_V up to 256 bytes, stop on EOS=LF
+                        HP3131A_V="Testing"
+                        ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=HP3131A_V
+                    elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
+                        #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
+                        #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 2'", term.=LF
+                        #Output to Ag53230A_V with ":read?", term.=LF
+                        time.sleep(2) #Delay for 2 seconds
+                        #Enter from Ag53230A_V up to 256 bytes, stop on EOS=LF
+                        Ag53230A_V="Testing"
+                        ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=Ag53230A_V
+                else:
+                    if WattsOrVarsCell[0]=="v": #If it is vars
+                        #Call RD Get Instantaneous Data with Prog Radian ID,0,4,RD31 Total
+                        #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        print("WattsOrVars: vars")
+                    elif WattsOrVarsCell[0]=="w": #If it is watts
+                        #RD Get Instantaneous Data with Prog Radian ID,0,2,RD31 Total
+                        #RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        print("WattsOrVars: watt")
+                    RD31Total="Testing"
+                    ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=RD31Total
+        #Execute Read Radian all Data
+        if SourceType=="CH":
+            #Output to CH5500_V with "S", term.=LF
+            #Output to CH5050_V with "S", term.=LF
+            print("SourceType = CH")
+        elif SourceType=="HEG":
+            #Output to PL10A_V with ":SOUR:OPER:STOP", term.=LF
+            print("SourceType = HEG")
+        elif SourceType=="FLUKE" or SourceType=="FLUHIGH":
+           #Output to FLUKE_V with "OUTP:STAT OFF", term.=LF 
+           print("SourceType = FLUKE or SourceType = FLUHIGH")
+        #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+        #Close RS232 6 WB
+        #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
+        #Close RS232 6 WB
+        #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
+        #Close RS232 6 WB
+        time.sleep(1) #Delay for 1 second
+        #Execute Paste Results function
+        time.sleep(1) #Delay for 1 second
+        RowNumber = RowNumber + 1 
+        ActiveRow = RowNumber
+        if ws['A'+str(ActiveRow)].value==0:
+            Finished=1
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():

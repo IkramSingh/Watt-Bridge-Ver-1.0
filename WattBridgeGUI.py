@@ -19,7 +19,7 @@ class WattBridgeSoftware ( wx.Frame ):
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
 		fgSizer1 = wx.FlexGridSizer( 0, 2, 0, 0 )
 		fgSizer1.SetFlexibleDirection( wx.BOTH )
@@ -197,6 +197,15 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.SetDMMRangeRefVolts.SetSelection( 1 )
 		fgSizer6.Add( self.SetDMMRangeRefVolts, 0, wx.ALL, 5 )
 		
+		self.CounterChannel = wx.StaticText( self, wx.ID_ANY, u"Counter Channel", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.CounterChannel.Wrap( -1 )
+		fgSizer6.Add( self.CounterChannel, 0, wx.ALL, 5 )
+		
+		CounterChannelChoices = [ u"Both Channels", u"Channel 1 only" ]
+		self.CounterChannel = wx.ComboBox( self, wx.ID_ANY, u"Channel 1 only", wx.DefaultPosition, wx.DefaultSize, CounterChannelChoices, 0 )
+		self.CounterChannel.SetSelection( 1 )
+		fgSizer6.Add( self.CounterChannel, 0, wx.ALL, 5 )
+		
 		
 		fgSizer1.Add( fgSizer6, 1, wx.EXPAND, 5 )
 		
@@ -242,7 +251,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.m_menubar1 = wx.MenuBar( 0 )
 		self.File = wx.Menu()
 		self.About = wx.MenuItem( self.File, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
-		self.File.Append( self.About )
+		self.File.AppendItem( self.About )
 		
 		self.m_menubar1.Append( self.File, u"File" ) 
 		
@@ -296,7 +305,7 @@ class About ( wx.Frame ):
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"About", pos = wx.DefaultPosition, size = wx.Size( 304,223 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
 		fgSizer8 = wx.FlexGridSizer( 0, 1, 0, 0 )
 		fgSizer8.SetFlexibleDirection( wx.BOTH )
