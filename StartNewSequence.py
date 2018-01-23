@@ -236,6 +236,38 @@ def powerFluke(wattBridgeGUI,ws):
     #Cause error Power Not On code=20006, text="Power output unsuccessful. Check connections."
     #End If Fluke not On
     time.sleep(30) #Delay for 30 seconds
+def powerCH5500(ws):
+    global CHType
+    CHType = ws['B7'].value #Obtain CHType
+    #Clear CH5500_V
+    if CHType<99:
+        #Clear CH5050_V
+        #Output to CH5050_V with "S" , "I", term.=LF
+    #Output to CH5500_V with "S", term.=LF
+    SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
+    SetVolts=0
+    if 9 <CHType< 12:
+        SetVolts = SetVoltsCell/2.497
+        #Output to CH5500_V with "O" , 0, term.=LF
+    else:
+        SetVolts = SetVoltsCell/1
+        #Output to CH5500_V with "O" , 180, term.=LF
+    #Output to CH5500_V with "R" , Set volts, term.=LF
+    SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
+    if SetAmpsCell<0:
+        #Output to CH5500_V with "O" , 0, term.=LF
+    Absolutevalue = abs(SetAmpsCell)
+    #Output to CH5500_V with "V" , Absolute value, term.=LF
+    SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
+    #Output to CH5500_V with "P" , SetPhaseCell, term.=LF
+    SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
+    #Output to CH5500_V with "F" , SetFrequencyCell, term.=LF
+    #Output to CH5500_V with "N", term.=LF
+    if CHType<99:
+        #Output to CH5050_V with "N", term.=LF
+        #Output to CH5500_V with "N", term.=LF
+        #Output to CH5050_V with "O", term.=LF
+    time.sleep(60) #Delay for 60 seconds
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -292,7 +324,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         print("SourceType: "+str(SourceType))
         if SourceType=="FLUKE" or SourceType=="FLUHIGH":
             print("FLUKE")
-            powerFluke(wattBridgeGUI,ws)
+            powerFluke(wattBridgeGUI,ws) #Execute powerFlke function.
         elif SourceType=="CH":
             print("CH5500")
             #Execute CH5500
@@ -412,9 +444,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=RD31Total
         #Execute Read Radian all Data
         if SourceType=="CH":
-            #Output to CH5500_V with "S", term.=LF
-            #Output to CH5050_V with "S", term.=LF
-            print("SourceType = CH")
+            CHType = ws['B7'].value #Obtain CHType
+            if CHType<99: #Perhaps not needed?
+                #Output to CH5500_V with "S", term.=LF
+                #Output to CH5050_V with "S", term.=LF
+                print("SourceType = CH")
         elif SourceType=="HEG":
             #Output to PL10A_V with ":SOUR:OPER:STOP", term.=LF
             print("SourceType = HEG")
