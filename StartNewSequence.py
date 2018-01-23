@@ -72,7 +72,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     all of the necessary measurements and calculations.'''
     global DCVRange,WCount,WSign,VCount,VSign,ReadingNumber,ActiveRow,RowNumber,SourceType
     global NumberOfReadings,Finished,ReadingNumber,ACVoltsRms,UncalFreqy,FFTVolts,FFTPhase
-    RowNumber=rowNumber
+    RowNumber=int(rowNumber)
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
     initialiseRadian() #Run Initialise Radian function. Must add later
     time.sleep(1) #Delay for 1 second
@@ -191,7 +191,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
-                #Close RS232 6 WB
+            #Close RS232 6 WB
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
             #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
@@ -261,12 +261,12 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         time.sleep(1) #Delay for 1 second
         #Execute Paste Results function
         time.sleep(1) #Delay for 1 second
-        RowNumber = RowNumber + 1 
+        RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
         ActiveRow = RowNumber
-        if ws['A'+str(ActiveRow)].value==0:
+        if ws['A'+str(ActiveRow)].value==0: #Once reached end of Excel sheet.
             Finished=1
-        wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
-        wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
+    wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
+    wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
 	pass
 def setPower(ws):
@@ -306,7 +306,7 @@ def setPower(ws):
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI):
     '''Updates the values shown in the main GUI.'''
-    wattBridgeGUI.CurrentRow.SetValue(RowNumber) #Show current Row in Excel file in main GUI to user.
+    wattBridgeGUI.CurrentRow.SetValue(str(RowNumber)) #Show current Row in Excel file in main GUI to user.
     print("GUI updated")
 def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     global RowNumber
