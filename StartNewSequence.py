@@ -123,7 +123,7 @@ def powerFluke(wattBridgeGUI,ws):
     #Output to FLUKE_V with "*CLS", term.=LF
     #Output to FLUKE_V with "*RST", term.=LF
     #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
-    if wattBridgeGUI.FlukeRamp.GetValue()<2:
+    if wattBridgeGUI.Flukeramp.GetValue()<2:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
     #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
@@ -226,8 +226,9 @@ def powerFluke(wattBridgeGUI,ws):
         #Calculate Vector Index with v=Fluke Error i=1
         #Cause error General Error code=20010, text=Vector Index
         #End If Fluke error
+        FlukeErrorNumber=0 #For testing reasons. Remove when not needed.
     #Output to FLUKE_V with "OUTP:STAT ON", term.=LF
-    time.sleep(wattBridgeGUI.FlukeRamp.GetValue()) #Delay for Fluke Ramp (s) seconds
+    time.sleep(float(wattBridgeGUI.Flukeramp.GetValue())) #Delay for Fluke Ramp (s) seconds
     #Output to FLUKE_V with "OUTP:STAT?", term.=LF
     time.sleep(0.5) #Delay for 0.5 seconds
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
@@ -243,6 +244,7 @@ def powerCH5500(ws):
     if CHType<99:
         #Clear CH5050_V
         #Output to CH5050_V with "S" , "I", term.=LF
+        print("CHType < 99")
     #Output to CH5500_V with "S", term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
     SetVolts=0
@@ -256,6 +258,7 @@ def powerCH5500(ws):
     SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
     if SetAmpsCell<0:
         #Output to CH5500_V with "O" , 0, term.=LF
+        print('SetAmpsCell<0')
     Absolutevalue = abs(SetAmpsCell)
     #Output to CH5500_V with "V" , Absolute value, term.=LF
     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
@@ -267,6 +270,7 @@ def powerCH5500(ws):
         #Output to CH5050_V with "N", term.=LF
         #Output to CH5500_V with "N", term.=LF
         #Output to CH5050_V with "O", term.=LF
+        print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
 
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
