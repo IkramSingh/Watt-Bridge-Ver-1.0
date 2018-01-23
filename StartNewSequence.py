@@ -219,9 +219,23 @@ def powerFluke(wattBridgeGUI,ws):
         #Output to FLUKE_V with "SYST:ERR?", term.=LF
         time.sleep(0.5) #Delay for 0.5 seconds
         #Enter from FLUKE_V(1) up to 512 bytes, stop on EOS=LF
-        FLUKE_V="Testing"
-        flukeError=FLUKE_V
-        
+        #Store in Fluke Error from FLUKE_V
+        #Calculate Vector Index with v=Fluke Error i=0
+        #Store in Fluke Error number from Vector Index
+        #If/Then Fluke error with x=Fluke Error number
+        #Calculate Vector Index with v=Fluke Error i=1
+        #Cause error General Error code=20010, text=Vector Index
+        #End If Fluke error
+    #Output to FLUKE_V with "OUTP:STAT ON", term.=LF
+    time.sleep(wattBridgeGUI.FlukeRamp.GetValue()) #Delay for Fluke Ramp (s) seconds
+    #Output to FLUKE_V with "OUTP:STAT?", term.=LF
+    time.sleep(0.5) #Delay for 0.5 seconds
+    #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
+    #Store in Is Fluke Off from FLUKE_V
+    #If/Then Fluke not On with x=Is Fluke Off
+    #Cause error Power Not On code=20006, text="Power output unsuccessful. Check connections."
+    #End If Fluke not On
+    time.sleep(30) #Delay for 30 seconds
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
