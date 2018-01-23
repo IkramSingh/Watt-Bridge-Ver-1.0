@@ -268,6 +268,7 @@ def powerCH5500(ws):
         #Output to CH5500_V with "N", term.=LF
         #Output to CH5050_V with "O", term.=LF
     time.sleep(60) #Delay for 60 seconds
+
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -324,12 +325,12 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         print("SourceType: "+str(SourceType))
         if SourceType=="FLUKE" or SourceType=="FLUHIGH":
             print("FLUKE")
-            powerFluke(wattBridgeGUI,ws) #Execute powerFlke function.
+            powerFluke(wattBridgeGUI,ws) #Execute powerFluke function.
         elif SourceType=="CH":
             print("CH5500")
-            #Execute CH5500
+            powerCH5500(ws) #Execute CH5500 function
         elif SourceType=="HEG":
-            #Execute PL10
+            #Execute PL10 !!!Not needed functon!!!
             print("PL10")
         else:
             print("SourceType selected in Excel file doesnt exist.")
