@@ -67,6 +67,48 @@ def getExcelColumn(column):
         return 'AM'
     if column==46:
         return 'AT'
+    if column==47:
+        return 'AU'
+    if column==48:
+        return 'AV'
+    if column==49:
+        return 'AW'
+    if column==50:
+        return 'AX'
+    if column==51:
+        return 'AY'
+    if column==52:
+        return 'AZ'
+    if column==53:
+        return 'BA'
+    if column==54:
+        return 'BB'
+    if column==55:
+        return 'BC'
+    if column==56:
+        return 'BD'
+    if column==57:
+        return 'BE'
+    if column==58:
+        return 'BF'
+    if column==59:
+        return 'BG'
+    if column==60:
+        return 'BH'
+    if column==61:
+        return 'BI'
+    if column==62:
+        return 'BJ'
+    if column==63:
+        return 'BK'
+    if column==64:
+        return 'BL'
+    if column==65:
+        return 'BM'
+    if column==66:
+        return 'BN'
+    if column==67:
+        return 'BO'
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -90,7 +132,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
         ReadingNumber=1
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
-        ActiveRow=rowNumber
+        ActiveRow=RowNumber
         Phase123Cell = ws['P'+str(ActiveRow)].value #Obtain phase value from Excel sheet
         if Phase123Cell==123 or Phase123Cell==0:
             RDPhase=0
