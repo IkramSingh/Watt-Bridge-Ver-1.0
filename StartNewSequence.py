@@ -34,6 +34,14 @@ ACVoltsRms=0
 UncalFreqy=0
 FFTVolts=0
 FFTPhase=0
+VRangeHigh=0
+DCVoltageOffset=0
+DCCurrentOffset=0
+HighCurrentRange=0
+IRangeLow=0
+IRangeHigh=0
+Chanel=0
+SetVoltsPhase=0
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
@@ -109,6 +117,111 @@ def getExcelColumn(column):
         return 'BN'
     if column==67:
         return 'BO'
+def powerFluke(wattBridgeGUI,ws):
+    global SetVoltsCell,SetPhaseCell,SetAmpsCell,SetFrequencyCell,VRangeHigh,DCVoltageOffset
+    global HighCurrentRange,DCCurrentOffset,IRangeLow,IRangeHigh,Chanel,SetVoltsPhase,FlukeErrorNumber
+    #Output to FLUKE_V with "*CLS", term.=LF
+    #Output to FLUKE_V with "*RST", term.=LF
+    #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
+    if wattBridgeGUI.FlukeRamp.GetValue()<2:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
+    #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
+    SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
+    SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
+    #Execute Set Phases function
+    SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
+    SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
+    if SetVoltsCell>1008:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage value out of range \n") #Update event log.
+    if SetVoltsCell>250:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage selected is above 250V \n") #Update event log.
+    if SetAmpsCell>120:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Current value out of range \n") #Update event log.
+    #Specific cases for SetVoltsCell
+    if 0 <= SetVoltsCell <= 22.9:
+        VRangeHigh=23
+        DCVoltageOffset=-0.00081
+    elif 22.9 <= SetVoltsCell <= 44.9:
+        VRangeHigh=90
+        DCVoltageOffset=0.00142
+    elif 44.9 <= SetVoltsCell <= 89.9:
+        VRangeHigh=45
+        DCVoltageOffset=-0.00637
+    elif 89.9 <= SetVoltsCell <= 179.9:
+        VRangeHigh=180
+        DCVoltageOffset=-0.0121
+    elif 179.9 <= SetVoltsCell <= 359.9:
+        VRangeHigh=360
+        DCVoltageOffset=-0.01784
+    elif 359.9 <= SetVoltsCell <= 649.9:
+        VRangeHigh=650
+        DCVoltageOffset=-0.02082
+    elif 649.9 <= SetVoltsCell <= 1008:
+        VRangeHigh=1008
+        DCVoltageOffset=-0.01602
+    if SourceType=="FLUHIGH":
+        if 0 <= SetAmpsCell <= 1.999:
+            HighCurrentRange=2
+            DCCurrentOffset=-0.000173
+        elif 1.999 <= SetAmpsCell <= 19.99:
+            HighCurrentRange=20
+            DCCurrentOffset=-0.00195
+        elif 19.99 <= SetAmpsCell <= 120:
+            HighCurrentRange=120
+            DCCurrentOffset=0.006345
+    else:
+        if 0 <= SetAmpsCell <= 0.249:
+            IRangeLow=0.05
+            IRangeHigh=0.25
+            DCCurrentOffset=1.785E-05
+        elif 0.249 <= SetAmpsCell <= 0.499:
+            IRangeLow=0.1
+            IRangeHigh=0.5
+            DCCurrentOffset=4.186E-05
+        elif 0.499 <= SetAmpsCell <= 0.999:
+            IRangeLow=0.05
+            IRangeHigh=1
+            DCCurrentOffset=8.285E-05
+        elif 0.999 <= SetAmpsCell <= 1.999:
+            IRangeLow=0.2
+            IRangeHigh=2
+            DCCurrentOffset=0.0001459
+        elif 1.999 <= SetAmpsCell <= 4.99:
+            IRangeLow=0.5
+            IRangeHigh=5
+            DCCurrentOffset=0.00042
+        elif 4.99 <= SetAmpsCell <= 9.99:
+            IRangeLow=1
+            IRangeHigh=10
+            DCCurrentOffset=0.0009386
+        elif 9.99 <= SetAmpsCell <= 21:
+            IRangeLow=2
+            IRangeHigh=21
+            DCCurrentOffset=0.002118
+    if wattBridgeGUI.SourceCh1.GetValue()==True:
+        Chanel = 1
+        SetPhaseCell=SetPhaseCell
+        SetVoltsPhase = 0
+        #Execute Setup Chanel function
+    if wattBridgeGUI.SourceCh2.GetValue()==True:
+        Chanel = 2
+        SetPhaseCell=SetPhaseCell
+        SetVoltsPhase = -120
+        #Execute Setup Chanel function 
+    if wattBridgeGUI.SourceCh3.GetValue()==True:
+        Chanel = 3
+        SetPhaseCell=SetPhaseCell
+        SetVoltsPhase = 120
+        #Execute Setup Chanel function 
+    FlukeErrorNumber=1
+    while FlukeErrorNumber!=0:
+        #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
+        #Output to FLUKE_V with "SYST:ERR?", term.=LF
+        time.sleep(0.5) #Delay for 0.5 seconds
+        #Enter from FLUKE_V(1) up to 512 bytes, stop on EOS=LF
+        FLUKE_V="Testing"
+        flukeError=FLUKE_V
+        
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -165,7 +278,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         print("SourceType: "+str(SourceType))
         if SourceType=="FLUKE" or SourceType=="FLUHIGH":
             print("FLUKE")
-            #Execute Power Fluke
+            powerFluke(wattBridgeGUI,ws)
         elif SourceType=="CH":
             print("CH5500")
             #Execute CH5500
