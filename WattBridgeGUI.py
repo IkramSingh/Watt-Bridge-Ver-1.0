@@ -206,6 +206,15 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.CounterChannel.SetSelection( 1 )
 		fgSizer6.Add( self.CounterChannel, 0, wx.ALL, 5 )
 		
+		self.OutputAutoHigh = wx.StaticText( self, wx.ID_ANY, u"52120 Output", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.OutputAutoHigh.Wrap( -1 )
+		fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL, 5 )
+		
+		OutputAutoHighChoices = [ u"AUTO", u"HIGH" ]
+		self.OutputAutoHigh = wx.ComboBox( self, wx.ID_ANY, u"AUTO", wx.DefaultPosition, wx.DefaultSize, OutputAutoHighChoices, 0 )
+		self.OutputAutoHigh.SetSelection( 0 )
+		fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL, 5 )
+		
 		
 		fgSizer1.Add( fgSizer6, 1, wx.EXPAND, 5 )
 		

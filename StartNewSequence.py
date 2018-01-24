@@ -121,6 +121,48 @@ def getExcelColumn(column):
         return 'BN'
     if column==67:
         return 'BO'
+def setupChanel(wattBridgeGUI):
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
+    time.sleep(0.5) #Delay for 0.5 seconds
+    #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
+    #Store in Phase On from FLUKE_V
+    if PhaseOn==0:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: One of the phases you have tried turn on is not fitted \n") #Update event log.
+    if SourceType = "FLUHIGH":
+        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
+        #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
+        #Store in Amp Fitted from FLUKE_V
+        if AmpFitted==0:
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: A 52120A unit is not fitted to the phase you have selected \n") #Update event log.
+        if wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==0:
+            #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
+        elif wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==1:
+            #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE HIGH", term.=LF
+        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:RANG " , 0 , "," , High Current Range, term.=LF  
+    else:
+        if SetAmpsCell>21:
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: You have selected a current value above 21A, please use the FLUHIGH source in Excel and retry \n") #Update event log.
+        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
+    #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
+    #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM1 " , Set amps cell , "," , Set phase cell, term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:STAT ON", term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM1 " , Set volts cell , "," , Set Volts Phase, term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM0 " , DC Voltage Offset , "," , 0, term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:STAT " , "ON", term.=LF
+    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:STAT " , "ON", term.=LF
+def setPhases():
+    global SetPhaseCell
+    if abs(SetPhaseCell) > 180.0:
+        if SetPhaseCell>0:
+            Sum = SetPhaseCell-360
+            SetPhaseCell = Sum
+        else:
+            Sum = SetPhaseCell+360
+            SetPhaseCell = Sum
 def powerFluke(wattBridgeGUI,ws):
     global SetVoltsCell,SetPhaseCell,SetAmpsCell,SetFrequencyCell,VRangeHigh,DCVoltageOffset
     global HighCurrentRange,DCCurrentOffset,IRangeLow,IRangeHigh,Chanel,SetVoltsPhase,FlukeErrorNumber
@@ -132,7 +174,7 @@ def powerFluke(wattBridgeGUI,ws):
     #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
-    #Execute Set Phases function
+    setPhases() #Execute Set Phases function
     SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
     SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
     if SetVoltsCell>1008:
@@ -206,17 +248,17 @@ def powerFluke(wattBridgeGUI,ws):
         Chanel = 1
         SetPhaseCell=SetPhaseCell
         SetVoltsPhase = 0
-        #Execute Setup Chanel function
+        setupChanel(wattBridgeGUI) #Execute Setup Chanel function
     if wattBridgeGUI.SourceCh2.GetValue()==True:
         Chanel = 2
         SetPhaseCell=SetPhaseCell
         SetVoltsPhase = -120
-        #Execute Setup Chanel function 
+        setupChanel(wattBridgeGUI) #Execute Setup Chanel function 
     if wattBridgeGUI.SourceCh3.GetValue()==True:
         Chanel = 3
         SetPhaseCell=SetPhaseCell
         SetVoltsPhase = 120
-        #Execute Setup Chanel function 
+        setupChanel(wattBridgeGUI) #Execute Setup Chanel function 
     FlukeErrorNumber=1
     while FlukeErrorNumber!=0:
         #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
@@ -276,8 +318,28 @@ def powerCH5500(ws):
         #Output to CH5050_V with "O", term.=LF
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
+def setUpFFTVoltsAndPhase():
+    global SampleData
+    SampleData=0 #Clear sample data
+    time.sleep(2) #Delay for 2 seconds
+    for FFTLoop in range(256):
+        #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
+        #Append to Sample Data from HP3458A_V
+    FFTFreqy = 1/SampleTime
+    #Calculate FFT with freq=FFT freqy wave=Sample Data
+    #Calculate MagnitudeVector with spectrum=FFT
+    #Calculate PhaseVector with spectrum=FFT
+    #Calculate FFT Volts with n=9 V=MagnitudeVector
+    #Calculate FFT Phase with n=9 V=PhaseVector
+def setUpFFT():
+    global SampleTime
+    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+    SampleTime = 9/(256*UncalFreqy)
+    #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
+    #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
+    #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
 def findDialSettings(wattBridgeGUI,ws):
-    global WCount,VCount,WSign,VSign
+    global WCount,VCount,WSign,VSign,UncalFreqy
     ws['AC'+str(ActiveRow)] = 0 #Set W dial cell to 0
     ws['AD'+str(ActiveRow)] = "WP-" #Set W sign cell to "WP-"
     ws['AE'+str(ActiveRow)] = 0 #Set V dial cell to 0
@@ -287,18 +349,17 @@ def findDialSettings(wattBridgeGUI,ws):
     ws['H'+str(ActiveRow)] = CTRatio
     ws['I'+str(ActiveRow)] = HEGFreq
     ws['AM7'] = "Min"
-    #Execute Frequency function
-    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A. Used to be "Execute Frequency function".
     ws['AB'+str(ActiveRow)]=UncalFreqy #Set the exact frequency value in Excel sheet.
-    #Execute Set Up FFT function
-    #Execute FFT Volts & Phase function
+    setUpFFT() #Execute Set Up FFT function
+    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
     if FFT Volts<0.7:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
     ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
     ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the FFT ref phase value in Excel sheet.
     #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Execute FFT Volts & Phase function
+    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
     ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
     ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
     WCount = ws['BP7'].value
@@ -308,6 +369,7 @@ def findDialSettings(wattBridgeGUI,ws):
     updateGUI(wattBridgeGUI)
     #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     #Close RS232 6 WB
+
 def refineDialSettings(wattBridgeGUI,ws):
     time.sleep(0.5) #Delay for 0.5 seconds
     WCount = ws['BP7'].value
@@ -334,7 +396,7 @@ def refineDialSettings(wattBridgeGUI,ws):
     ws['AF'+str(ActiveRow)] = VSign
     ws['AM7'] = "Max"
     time.sleep(0.5) #Delay for 0.5 seconds
-    #Execute FFT Volts & Phase
+    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase
     time.sleep(0.5) #Delay for 0.5 seconds
     WattsDial = int(WCount)/1024
     VarsDial = int(VCount)/1024
@@ -374,26 +436,7 @@ def loadDialSettings(ws):
     ws['AD'+str(ActiveRow)] = WSign
     ws['AE'+str(ActiveRow)] = VarsDial
     ws['AF'+str(ActiveRow)] = VSign
-def setUpFFT():
-    global SampleTime
-    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
-    SampleTime = 9/(256*UncalFreqy)
-    #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
-    #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
-    #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
-def setUpFFTVoltsAndPhase():
-    global SampleData
-    SampleData=0 #Clear sample data
-    time.sleep(2) #Delay for 2 seconds
-    for FFTLoop in range(256):
-        #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
-        #Append to Sample Data from HP3458A_V
-    FFTFreqy = 1/SampleTime
-    #Calculate FFT with freq=FFT freqy wave=Sample Data
-    #Calculate MagnitudeVector with spectrum=FFT
-    #Calculate PhaseVector with spectrum=FFT
-    #Calculate FFT Volts with n=9 V=MagnitudeVector
-    #Calculate FFT Phase with n=9 V=PhaseVector
+
 def readRadian2(ReadingsLoop,wsRS31Data):
     global input1,input2,input3
     input1=[] #Clear input1
