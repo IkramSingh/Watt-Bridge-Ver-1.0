@@ -643,7 +643,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
         #Close RS232 6 WB
         time.sleep(1) #Delay for 1 second
-        #Execute Paste Results function
+        pasteResults(ws) #Execute Paste Results function
         time.sleep(1) #Delay for 1 second
         RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
         ActiveRow = RowNumber
@@ -652,7 +652,9 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
-	pass
+    #Call RD Assign Device with 7,Prog Radian ID
+    #Call RD Inst Reset with Prog Radian ID
+    print('Initialise Radian')
 def setPower(ws):
     '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
     various commands to the "RS232 6 WB".'''
