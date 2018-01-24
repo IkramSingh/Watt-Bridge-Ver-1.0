@@ -24,7 +24,7 @@ SourceType=0
 CHType=0
 CalculationResults=0
 RDPhase=0
-SampleData=0
+SampleData=[]
 WCount=0
 WSign=0
 VCount=0
@@ -42,6 +42,10 @@ IRangeLow=0
 IRangeHigh=0
 Chanel=0
 SetVoltsPhase=0
+SampleTime=0
+input1=[]
+input2=[]
+input3=[]
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
@@ -345,6 +349,77 @@ def refineDialSettings(wattBridgeGUI,ws):
     ws['AE'+str(ActiveRow)] = VarsDial
     ws['AF'+str(ActiveRow)] = VSign
     updateGUI(wattBridgeGUI)
+def loadDialSettings(ws):
+    #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    WCount = ws['BP7'].value
+    VCount = ws['BR7'].value
+    WSign = ws['BQ7'].value
+    VSign = ws['BS7'].value
+    #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    WattsDial = int(WCount)/1024
+    VarsDial = int(VCount)/1024
+    ws['AC'+str(ActiveRow)] = WattsDial
+    ws['AD'+str(ActiveRow)] = WSign
+    ws['AE'+str(ActiveRow)] = VarsDial
+    ws['AF'+str(ActiveRow)] = VSign
+def setUpFFT():
+    global SampleTime
+    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+    SampleTime = 9/(256*UncalFreqy)
+    #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
+    #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
+    #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
+def setUpFFTVoltsAndPhase():
+    global SampleData
+    SampleData=0 #Clear sample data
+    time.sleep(2) #Delay for 2 seconds
+    for FFTLoop in range(256):
+        #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
+        #Append to Sample Data from HP3458A_V
+    FFTFreqy = 1/SampleTime
+    #Calculate FFT with freq=FFT freqy wave=Sample Data
+    #Calculate MagnitudeVector with spectrum=FFT
+    #Calculate PhaseVector with spectrum=FFT
+    #Calculate FFT Volts with n=9 V=MagnitudeVector
+    #Calculate FFT Phase with n=9 V=PhaseVector
+def readRadian2(ReadingsLoop,wsRS31Data):
+    global input1,input2,input3
+    input1=[] #Clear input1
+    input2=[] #Clear input2
+    input3=[] #Clear input3
+    for ReadRadLoop in range(7):
+        #Call RD Get All Instant Data with Prog Radian ID,ReadRad loop,Rad Ph A,Rad Ph B,Rad Ph C,Rad Ph Neutral,Rad Ph Net
+        #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+        #Append to Input 1 from Rad Ph A
+        #Append to Input 2 from Rad Ph B
+        #Append to Input 3 from Rad Ph C
+        #ppend to Input Total from Rad Ph Net
+    colOffset = 26+(ReadingsLoop*28)
+    for WriteRadToExcel in range (7):
+        #Calculate Input 1 Cell with row=Active Row offset=col offset loop=write Rad to exel
+        #Calculate Rad data 2 write with vector=Input 1 loop=write Rad to exel
+        #Set remote Excel link RD31 Data item Input 1 Cell to Rad data 2 write
+        #Calculate Input 2 Cell with row=Active Row offset=col offset loop=write Rad to exel
+        #Calculate Rad data 2 write with vector=Input 2 loop=write Rad to exel
+        #Set remote Excel link RD31 Data item Input 2 Cell to Rad data 2 write
+        #Calculate Input 3 Cell with row=Active Row offset=col offset loop=write Rad to exel
+        #Calculate Rad data 2 write with vector=Input 3 loop=write Rad to exel
+        #Set remote Excel link RD31 Data item Input 3 Cell to Rad data 2 write
+        #Calculate Total Cell with row=Active Row offset=col offset loop=write Rad to exel
+        #Calculate Rad data 2 write with vector=Input Total loop=write Rad to exel
+        #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -415,11 +490,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         findDialSettings(wattBridgeGUI,ws) #Execute Find Dial Settings
         refineDialSettings(wattBridgeGUI,ws) #Execute Refine Dial Settings
         ActiveRow=RowNumber
-        #Execute Load Dial Settings
+        loadDialSettings(ws) #Execute Load Dial Settings
         NumberOfReadings = ws['K'+str(ActiveRow)].value #Get the Number of Readings value from Excel sheet.
         print("NumberOfReadings: " + str(NumberOfReadings))
         if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
-            #Execute Test
+            #Execute Test !!!Not needed functon!!!
             print("Test")
         #Output to HP3478A_V with "F4RAN5Z1", term.=LF
         time.sleep(3) #Delay for 3 seconds
@@ -457,9 +532,9 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)]=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
             UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
             ws['AB'+str(ActiveRow)]=UncalFreqy #Set the exact frequency value in Excel sheet.
-            #Execute Set Up FFT Function
+            setUpFFT() #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
-            #Execute FFT Volts & Phase function
+            setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
             FFTVolts="Testing"
             FFTPhase="Testing"
             ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
@@ -471,11 +546,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
-            #Execute FFT Volts & Phase function
+            setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
             ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Read RD31 \n") #Update event log.
-            #Execute Read Radian2 function.
+            readRadian2(ReadingsLoop,wsRS31Data) #Execute Read Radian2 function.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Counter \n") #Update event log.
             GateTime = Ch1GateTimeCell
             if GateTime>0.1:
@@ -519,7 +594,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                         print("WattsOrVars: watt")
                     RD31Total="Testing"
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=RD31Total
-        #Execute Read Radian all Data
+        #Execute Read Radian all Data !!!Not needed function!!!
         if SourceType=="CH":
             CHType = ws['B7'].value #Obtain CHType
             if CHType<99: #Perhaps not needed?
