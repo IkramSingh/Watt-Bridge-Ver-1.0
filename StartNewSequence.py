@@ -272,7 +272,79 @@ def powerCH5500(ws):
         #Output to CH5050_V with "O", term.=LF
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
-
+def findDialSettings(wattBridgeGUI,ws):
+    global WCount,VCount,WSign,VSign
+    ws['AC'+str(ActiveRow)] = 0 #Set W dial cell to 0
+    ws['AD'+str(ActiveRow)] = "WP-" #Set W sign cell to "WP-"
+    ws['AE'+str(ActiveRow)] = 0 #Set V dial cell to 0
+    ws['AF'+str(ActiveRow)] = "VP-" #Set V sign cell to "VP-"
+    ws['F'+str(ActiveRow)] = DividerRange
+    ws['G'+str(ActiveRow)] = Shunt
+    ws['H'+str(ActiveRow)] = CTRatio
+    ws['I'+str(ActiveRow)] = HEGFreq
+    ws['AM7'] = "Min"
+    #Execute Frequency function
+    UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+    ws['AB'+str(ActiveRow)]=UncalFreqy #Set the exact frequency value in Excel sheet.
+    #Execute Set Up FFT function
+    #Execute FFT Volts & Phase function
+    if FFT Volts<0.7:
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
+    ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
+    ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the FFT ref phase value in Excel sheet.
+    #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Execute FFT Volts & Phase function
+    ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
+    ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
+    WCount = ws['BP7'].value
+    VCount = ws['BR7'].value
+    WSign = ws['BQ7'].value
+    VSign = ws['BS7'].value
+    updateGUI(wattBridgeGUI)
+    #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+def refineDialSettings(wattBridgeGUI,ws):
+    time.sleep(0.5) #Delay for 0.5 seconds
+    WCount = ws['BP7'].value
+    VCount = ws['BR7'].value
+    WSign = ws['BQ7'].value
+    VSign = ws['BS7'].value
+    #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    WattsDial = int(WCount)/1024
+    VarsDial = int(VCount)/1024
+    ws['AC'+str(ActiveRow)] = WattsDial
+    ws['AD'+str(ActiveRow)] = WSign
+    ws['AE'+str(ActiveRow)] = VarsDial
+    ws['AF'+str(ActiveRow)] = VSign
+    ws['AM7'] = "Max"
+    time.sleep(0.5) #Delay for 0.5 seconds
+    #Execute FFT Volts & Phase
+    time.sleep(0.5) #Delay for 0.5 seconds
+    WattsDial = int(WCount)/1024
+    VarsDial = int(VCount)/1024
+    WCount = ws['BP7'].value
+    VCount = ws['BR7'].value
+    #Output to RS232 6 WB with "W" , WCount), term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
+    #Close RS232 6 WB
+    ws['AC'+str(ActiveRow)] = WattsDial
+    ws['AD'+str(ActiveRow)] = WSign
+    ws['AE'+str(ActiveRow)] = VarsDial
+    ws['AF'+str(ActiveRow)] = VSign
+    updateGUI(wattBridgeGUI)
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
@@ -340,8 +412,8 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             print("SourceType selected in Excel file doesnt exist.")
         ActiveRow=7 #Set ActiveRow to 7.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
-        #Execute Find Dial Settings
-        #Execute Refine Dial Settings
+        findDialSettings(wattBridgeGUI,ws) #Execute Find Dial Settings
+        refineDialSettings(wattBridgeGUI,ws) #Execute Refine Dial Settings
         ActiveRow=RowNumber
         #Execute Load Dial Settings
         NumberOfReadings = ws['K'+str(ActiveRow)].value #Get the Number of Readings value from Excel sheet.
@@ -515,6 +587,11 @@ def setPower(ws):
 def updateGUI(wattBridgeGUI):
     '''Updates the values shown in the main GUI.'''
     wattBridgeGUI.CurrentRow.SetValue(str(RowNumber)) #Show current Row in Excel file in main GUI to user.
+    wattBridgeGUI.LineCurrent.SetValue(str(ws['BL7'].value)) #Display the Line Current value
+    wattBridgeGUI.LineVolts.SetValue(str(ws['BM7'].value)) #Display the Line Volts value
+    wattBridgeGUI.Phase.SetValue(str(ws['BN7'].value)) #Display the phase value
+    wattBridgeGUI.WCount1.SetValue(str(WCount)) #Display the W count value
+    wattBridgeGUI.VCount.SetValue(str(VCount)) #Display the V Count value
     print("GUI updated")
 def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     global RowNumber
