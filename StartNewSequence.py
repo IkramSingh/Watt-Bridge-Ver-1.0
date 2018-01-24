@@ -424,56 +424,31 @@ def pasteResults(ws):
     global ActiveRow
     ActiveRow=7
     CalculationResult = [] #Clear Calculation Results
-    MeanWatts = ws['BW'+str(ActiveRow)]
+    MeanWatts = ws['BW'+str(ActiveRow)] #Index=0
     CalculationResult.append(MeanWatts)
-    MeanVars = ws['BX'+str(ActiveRow)]
+    MeanVars = ws['BX'+str(ActiveRow)] #Index=1
     CalculationResult.append(MeanVars)
-    MeanVolts = ws['BY'+str(ActiveRow)]
+    MeanVolts = ws['BY'+str(ActiveRow)] #Index=2
     CalculationResult.append(MeanVolts)
-    MeanAmps = ws['BZ'+str(ActiveRow)]
+    MeanAmps = ws['BZ'+str(ActiveRow)] #Index=3
     CalculationResult.append(MeanAmps)
-    MeanDegrees = ws['CA'+str(ActiveRow)]
-    CalculationResult.append(MeanDegrees)
-    WattsSTDDev = ws['CB'+str(ActiveRow)]
-    CalculationResult.append(WattsSTDDev)
-    VarSTDDev = ws['CC'+str(ActiveRow)]
-    CalculationResult.append(VarSTDDev)
-    VoltsSTDDev = ws['CD'+str(ActiveRow)]
-    CalculationResult.append(VoltsSTDDev)
-    AmpsSTDDev = ws['CE'+str(ActiveRow)]
-    CalculationResult.append(AmpsSTDDev)
-    PhaseSTDDev = ws['CF'+str(ActiveRow)]
-    CalculationResult.append(PhaseSTDDev)
-    ErrorPercentage = ws['CG'+str(ActiveRow)]
-    CalculationResult.append(ErrorPercentage)
-    CombinedUnc = ws['CH'+str(ActiveRow)]
-    CalculationResult.append(CombinedUnc)
-    DegreesOfFreedom = ws['CI'+str(ActiveRow)]
-    CalculationResult.append(DegreesOfFreedom)
-    CoverageFactor = ws['CJ'+str(ActiveRow)]
-    CalculationResult.append(CoverageFactor)
-    ExpandedUncertainty = ws['CK'+str(ActiveRow)]
-    CalculationResult.append(ExpandedUncertainty)
-    PowerFactor = ws['CL'+str(ActiveRow)]
-    CalculationResult.append(PowerFactor)
-    MeanRatio = ws['CM'+str(ActiveRow)]
-    CalculationResult.append(MeanRatio)
-    RatioSTDDev = ws['CN'+str(ActiveRow)]
-    CalculationResult.append(RatioSTDDev)
-    Impulses = ws['CO'+str(ActiveRow)]
-    CalculationResult.append(Impulses)
-    MeanFreq = ws['CP'+str(ActiveRow)]
-    CalculationResult.append(MeanFreq)
-    FreqSTDDev = ws['CQ'+str(ActiveRow)]
-    CalculationResult.append(FreqSTDDev)
-    Temperature = ws['CR'+str(ActiveRow)]
-    CalculationResult.append(Temperature)
-    Degrees = ws['CS'+str(ActiveRow)]
-    CalculationResult.append(Degrees)
-    C1Cell = ws['CT'+str(ActiveRow)]
-    CalculationResult.append(C1Cell)
+    for index in range(4, 24): #Obtain the data from Row=7 'BW7' onwards and add to list
+        newColumn = chr(65+(index-4))
+        data = ws['B'+newColumn+str(ActiveRow)]
+        CalculationResult.append(data)
     ActiveRow = RowNumber
-    Result = CalculationResults[0] #Obtain the value at 0th index
+    Result = CalculationResult[0]
+    ws['BW'+str(ActiveRow)] = Result
+    Result = CalculationResult[1]
+    ws['BX'+str(ActiveRow)] = Result
+    Result = CalculationResult[2]
+    ws['BY'+str(ActiveRow)] = Result
+    Result = CalculationResult[3]
+    ws['BZ'+str(ActiveRow)] = Result
+    for index in range(4, 24): #Take all of the data from list and add to the 'BWActiveRow' onwards
+        Result = CalculationResult[index]
+        newColumn = chr(65+(index-4))
+        ws['B'+newColumn+str(ActiveRow)] = Result
 def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
