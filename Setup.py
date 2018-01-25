@@ -11,3 +11,8 @@ def setup3458A():
     instrument.write('DISP OFF, READY')
     return instrument
 
+def setup53230A():
+    '''Creates a communication link between Watt Bridge software and Ag53230A Frequency Counter'''
+    rm = visa.ResourceManager()
+    instrument = rm.open_resource('GPIB0::3::INSTR')
+    return instrument
