@@ -17,7 +17,7 @@ import wx.xrc
 class WattBridgeSoftware ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,600 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,658 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
@@ -234,8 +234,8 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.MakeSafe = wx.Button( self, wx.ID_ANY, u"Make Safe", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer7.Add( self.MakeSafe, 0, wx.ALL, 5 )
 		
-		self.CheckConnections = wx.Button( self, wx.ID_ANY, u"Check Connections", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer7.Add( self.CheckConnections, 0, wx.ALL, 5 )
+		self.CheckConnectionsSetup = wx.Button( self, wx.ID_ANY, u"Check Connections / Setup Instruments", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer7.Add( self.CheckConnectionsSetup, 0, wx.ALL, 5 )
 		
 		
 		fgSizer1.Add( fgSizer7, 1, wx.EXPAND, 5 )
@@ -275,7 +275,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.ContinueSequence.Bind( wx.EVT_BUTTON, self.ContinueSequenceOnButtonClick )
 		self.SaveData.Bind( wx.EVT_BUTTON, self.SaveDataOnButtonClick )
 		self.MakeSafe.Bind( wx.EVT_BUTTON, self.MakeSafeOnButtonClick )
-		self.CheckConnections.Bind( wx.EVT_BUTTON, self.CheckConnectionsOnButtonClick )
+		self.CheckConnectionsSetup.Bind( wx.EVT_BUTTON, self.CheckConnectionsOnButtonClick )
 		self.Bind( wx.EVT_MENU, self.AboutOnMenuSelection, id = self.About.GetId() )
 	
 	def __del__( self ):

@@ -8,12 +8,16 @@ import os.path
 import os
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
+    HP3458A_V=0
     '''Contains all of the functions to operate the WattBridge from the GUI.
     Creates the main GUI window as well as the Events Log window.'''
     def __init__( self, parent ):
         WattBridgeGUI.WattBridgeSoftware.__init__(self,parent)
         self.setupSpreadsheet()
         print os.path.abspath(os.curdir)
+    def CheckConnectionsOnButtonClick( self, event ):
+        global HP3458A_V
+        HP3458A_V = Setup.setup3458A()
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()

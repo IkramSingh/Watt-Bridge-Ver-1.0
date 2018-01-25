@@ -37,11 +37,11 @@ def FNVmeter_bw(Freq,Range):
         
     return Bw_corr
 
-def OnStart():
-    global instrument
-    rm = visa.ResourceManager()
-    instrument = rm.open_resource('GPIB0::21::INSTR')
-    instrument.timeout = 10000
+## def OnStart():
+##     global instrument
+##     rm = visa.ResourceManager()
+##     instrument = rm.open_resource('GPIB0::21::INSTR')
+##     instrument.timeout = 10000
 
 ## def offsettimes(times):
 ##     array = np.array(times)
@@ -97,7 +97,6 @@ def reset():
     instrument.write('DISP OFF, READY')
     
 def run():
-    global instrument
     reset()
 
     Force = False #input("force True/False: ")             #are variables forced or not
