@@ -128,7 +128,7 @@ def setupChanel(wattBridgeGUI):
     #Store in Phase On from FLUKE_V
     if PhaseOn==0:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: One of the phases you have tried turn on is not fitted \n") #Update event log.
-    if SourceType = "FLUHIGH":
+    if SourceType == "FLUHIGH":
         #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
         #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
         #Store in Amp Fitted from FLUKE_V
@@ -136,8 +136,10 @@ def setupChanel(wattBridgeGUI):
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: A 52120A unit is not fitted to the phase you have selected \n") #Update event log.
         if wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==0:
             #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
+            print("AUTO")
         elif wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==1:
             #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE HIGH", term.=LF
+            print("HIGH")
         #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:RANG " , 0 , "," , High Current Range, term.=LF  
     else:
         if SetAmpsCell>21:
@@ -325,6 +327,7 @@ def setUpFFTVoltsAndPhase():
     for FFTLoop in range(256):
         #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
         #Append to Sample Data from HP3458A_V
+        print("FFTLoop")
     FFTFreqy = 1/SampleTime
     #Calculate FFT with freq=FFT freqy wave=Sample Data
     #Calculate MagnitudeVector with spectrum=FFT
@@ -353,7 +356,7 @@ def findDialSettings(wattBridgeGUI,ws):
     ws['AB'+str(ActiveRow)]=UncalFreqy #Set the exact frequency value in Excel sheet.
     setUpFFT() #Execute Set Up FFT function
     setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
-    if FFT Volts<0.7:
+    if FFTVolts<0.7:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
     ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
     ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the FFT ref phase value in Excel sheet.
@@ -449,6 +452,7 @@ def readRadian2(ReadingsLoop,wsRS31Data):
         #Append to Input 2 from Rad Ph B
         #Append to Input 3 from Rad Ph C
         #ppend to Input Total from Rad Ph Net
+        print("ReadRadLoop")
     colOffset = 26+(ReadingsLoop*28)
     for WriteRadToExcel in range (7):
         #Calculate Input 1 Cell with row=Active Row offset=col offset loop=write Rad to exel
@@ -463,6 +467,7 @@ def readRadian2(ReadingsLoop,wsRS31Data):
         #Calculate Total Cell with row=Active Row offset=col offset loop=write Rad to exel
         #Calculate Rad data 2 write with vector=Input Total loop=write Rad to exel
         #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
+        print("WriteRadToExcel")
 def pasteResults(ws):
     global ActiveRow
     ActiveRow=7
