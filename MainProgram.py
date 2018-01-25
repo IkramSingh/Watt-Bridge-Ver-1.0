@@ -18,6 +18,11 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     def CheckConnectionsOnButtonClick( self, event ):
         global HP3458A_V
         HP3458A_V = Setup.setup3458A()
+        ID = str(HP3458A_V.query('ID?'))
+        if ID[0]=="H" and ID[1]=="P" and ID[2]=="3" and ID[3]=="4" and ID[4]=="5" and ID[5]=="8" and ID[6]=="A":
+            self.WattBridgeEventsLog.AppendText("HP3458A Successfully Set Up\n") #Inform the user.
+        else:
+            self.WattBridgeEventsLog.AppendText("HP3458A Not Successfully Set Up\n") #Inform the user.
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
