@@ -9,13 +9,16 @@ import os
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     HP3458A_V=0
-    '''Contains all of the functions to operate the WattBridge from the GUI.
+    '''Class that contains all of the functions to operate the WattBridge from the GUI.
     Creates the main GUI window as well as the Events Log window.'''
     def __init__( self, parent ):
+        '''Constructor for WattBridge class.'''
         WattBridgeGUI.WattBridgeSoftware.__init__(self,parent)
         self.setupSpreadsheet()
         print os.path.abspath(os.curdir)
     def CheckConnectionsOnButtonClick( self, event ):
+        '''Creates communication links between Watt Bridge software and all of the machines
+        as well as checking to see if the communication links are successful'''
         global HP3458A_V
         HP3458A_V = Setup.setup3458A()
         ID = str(HP3458A_V.query('ID?'))
@@ -36,6 +39,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.wb.save(self.filename) #Save file with same name
         self.WattBridgeEventsLog.AppendText("Spreadsheet saved successfully\n") #Inform the user.
     def SaveDataOnButtonClick( self, event ):
+        '''Accesses the saveSpreadsheet function when user presses "Save Data" button in the main GUI'''
         self.saveSpreadsheet()
     def StartNewSequenceOnButtonClick( self, event ):
         '''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''

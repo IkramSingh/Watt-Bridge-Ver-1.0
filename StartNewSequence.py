@@ -51,6 +51,7 @@ input3=[]
 DCVRange=0
 ActiveRow=0
 def getExcelColumn(column):
+    '''Returns the character form of the column parameter passed in.'''
     if column==35:
         return 'AI'
     if column==36:
@@ -157,6 +158,7 @@ def setupChanel(wattBridgeGUI):
     #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:STAT " , "ON", term.=LF
     #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:STAT " , "ON", term.=LF
 def setPhases():
+    '''Sets the phase value.'''
     global SetPhaseCell
     if abs(SetPhaseCell) > 180.0:
         if SetPhaseCell>0:
@@ -335,6 +337,7 @@ def setUpFFTVoltsAndPhase():
     #Calculate FFT Volts with n=9 V=MagnitudeVector
     #Calculate FFT Phase with n=9 V=PhaseVector
 def setUpFFT():
+    '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
     global SampleTime
     UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
     SampleTime = 9/(256*UncalFreqy)
@@ -342,6 +345,8 @@ def setUpFFT():
     #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
     #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
 def findDialSettings(wattBridgeGUI,ws):
+    '''Obtains the Dial setting from the Excel sheet and executes the setUpFFT 
+    and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
     global WCount,VCount,WSign,VSign,UncalFreqy
     ws['AC'+str(ActiveRow)] = 0 #Set W dial cell to 0
     ws['AD'+str(ActiveRow)] = "WP-" #Set W sign cell to "WP-"
@@ -374,6 +379,8 @@ def findDialSettings(wattBridgeGUI,ws):
     #Close RS232 6 WB
 
 def refineDialSettings(wattBridgeGUI,ws):
+    '''Obtains the Dial settings from the Excel sheet and refines them and executes the setUpFFT 
+    and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
     time.sleep(0.5) #Delay for 0.5 seconds
     WCount = ws['BP7'].value
     VCount = ws['BR7'].value
@@ -415,6 +422,7 @@ def refineDialSettings(wattBridgeGUI,ws):
     ws['AF'+str(ActiveRow)] = VSign
     updateGUI(wattBridgeGUI)
 def loadDialSettings(ws):
+    '''Loads all of the Dial settings from the Excel sheet.'''
     #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     #Close RS232 6 WB
     WCount = ws['BP7'].value
@@ -469,6 +477,9 @@ def readRadian2(ReadingsLoop,wsRS31Data):
         #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
         print("WriteRadToExcel")
 def pasteResults(ws):
+    '''Obtains all of the calculated values such as MeanVolts etc from
+    the Excel sheet and then places them within the ActiveRow lines
+    below.'''
     global ActiveRow
     ActiveRow=7
     CalculationResult = [] #Clear Calculation Results
@@ -738,7 +749,8 @@ def setPower(ws):
     # Close RS232 6 WB
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI):
-    '''Updates the values shown in the main GUI.'''
+    '''Updates the values shown in the main GUI. This is executes
+    simultaneously with the startNewSequence via threads.'''
     wattBridgeGUI.CurrentRow.SetValue(str(RowNumber)) #Show current Row in Excel file in main GUI to user.
     wattBridgeGUI.LineCurrent.SetValue(str(ws['BL7'].value)) #Display the Line Current value
     wattBridgeGUI.LineVolts.SetValue(str(ws['BM7'].value)) #Display the Line Volts value
@@ -747,10 +759,10 @@ def updateGUI(wattBridgeGUI):
     wattBridgeGUI.VCount.SetValue(str(VCount)) #Display the V Count value
     print("GUI updated")
 def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
-    global RowNumber
     '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
     functions are executing simultaneously for the user.'''
+    global RowNumber
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,))

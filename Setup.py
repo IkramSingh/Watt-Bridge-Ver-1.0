@@ -1,6 +1,7 @@
 import visa
 
 def setup3458A():
+    '''Creates a communication link between Watt Bridge software and HP3458A DVM'''
     rm = visa.ResourceManager()
     instrument = rm.open_resource('GPIB0::22::INSTR')
     instrument.timeout = 30000
