@@ -17,7 +17,7 @@ import wx.xrc
 class WattBridgeSoftware ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,658 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Watt Bridge Software 1.0", pos = wx.DefaultPosition, size = wx.Size( 682,698 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
@@ -199,7 +199,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.CounterChannel = wx.StaticText( self, wx.ID_ANY, u"Counter Channel", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.CounterChannel.Wrap( -1 )
-		fgSizer6.Add( self.CounterChannel, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.CounterChannel, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		CounterChannelChoices = [ u"Both Channels", u"Channel 1 only" ]
 		self.CounterChannel = wx.ComboBox( self, wx.ID_ANY, u"Channel 1 only", wx.DefaultPosition, wx.DefaultSize, CounterChannelChoices, 0 )
@@ -208,12 +208,21 @@ class WattBridgeSoftware ( wx.Frame ):
 		
 		self.OutputAutoHigh = wx.StaticText( self, wx.ID_ANY, u"52120 Output", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.OutputAutoHigh.Wrap( -1 )
-		fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL, 5 )
+		fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		OutputAutoHighChoices = [ u"AUTO", u"HIGH" ]
 		self.OutputAutoHigh = wx.ComboBox( self, wx.ID_ANY, u"AUTO", wx.DefaultPosition, wx.DefaultSize, OutputAutoHighChoices, 0 )
 		self.OutputAutoHigh.SetSelection( 0 )
 		fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL, 5 )
+		
+		self.Channel1Filter = wx.StaticText( self, wx.ID_ANY, u"Channel 1 Filter", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.Channel1Filter.Wrap( -1 )
+		fgSizer6.Add( self.Channel1Filter, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+		
+		Channel1FilterChoices = [ u"OFF", u"ON" ]
+		self.Channel1Filter = wx.ComboBox( self, wx.ID_ANY, u"OFF", wx.DefaultPosition, wx.DefaultSize, Channel1FilterChoices, 0 )
+		self.Channel1Filter.SetSelection( 0 )
+		fgSizer6.Add( self.Channel1Filter, 0, wx.ALL, 5 )
 		
 		
 		fgSizer1.Add( fgSizer6, 1, wx.EXPAND, 5 )

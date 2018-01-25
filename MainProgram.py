@@ -6,6 +6,7 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 import os.path
 import os
+import time
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     HP3458A_V=0
@@ -28,6 +29,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         Ag53230A_V = Setup.setup53230A() #Get Ag53230A Visa object.
         Ag53230A_V_ID = str(Ag53230A_V.query('*IDN?')) #Check to see if Ag53230A has been successfully connected.
         self.WattBridgeEventsLog.AppendText(Ag53230A_V_ID)
+        self.initialiseCounter() #Initialise Ag53230A_V Frequency Counter
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
@@ -56,9 +58,34 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.wsRS31Data = self.wb.worksheets[1] #Second worksheet titled "RD31 Data"
         print("Spreadsheet setup successfully \n")
         self.WattBridgeEventsLog.AppendText("Spreadsheet setup successfully \n")#Inform the user.
-    def initialiseCounter():
+    def initialiseCounter(self):
+        '''Initialises the 53230A Frequency Counter.'''
         if self.SelectCounter.GetCurrentSelection()==0:
-            print("0")
+           Ag53230A_V.write('*rst;*cls;*sre 0;*ese 0;:stat:pres;:INP1:FILT:LPAS:STAT 1') 
+           Ag53230A_V.write(':sens:freq:gate:sour time')
+           Ag53230A_V.write(':inp1:rang 50')
+           Ag53230A_V.write(':sens:rosc:sour int')
+           if self.Channel1Filter.GetCurrentSelection()==1:
+               print("Channel 1 Filter on")
+               Ag53230A_V.write(';:INP1:FILT:LPAS:STAT 1')
+           else:
+               print("Channel 1 Filter off")
+               Ag53230A_V.write(';:inp1:filt:lpas:stat 0')
+           if self.Ch1TrigLevel.GetCurrentSelection()==0:
+               print("Ch 1 Trig Level 3V")
+               Ag53230A_V.write(':inp1:coup dc;:inp1:slope pos;:inp1:lev:abs 3V;')
+           elif self.Ch1TrigLevel.GetCurrentSelection()==1:
+               print("Ch 1 Trig Level 6V")
+               Ag53230A_V.write(':inp1:coup dc;:inp1:slope pos;:inp1:lev:abs 6V;')
+           if self.Ch2TrigLevel.GetCurrentSelection()==0:
+               print("Ch 2 Trig Level 3V")
+               Ag53230A_V.write(':inp2:coup dc;:inp2:slope pos;:inp2:lev:abs 3V;')
+           elif self.Ch2TrigLevel.GetCurrentSelection()==1:
+               print("Ch 2 Trig Level 6V")
+               Ag53230A_V.write(':inp2:coup dc;:inp2:slope pos;:inp2:lev:abs 6V;')
+           Ag53230A_V.write('DISP:TEXT "Counter Initialised"')
+           time.sleep(3) #Delay for 3 seconds
+           Ag53230A_V.write('DISP:TEXT:CLE')
 #mandatory in wx, create an app, False stands for not deteriction stdin/stdout
 #refer manual for details
 app = wx.App(False)
