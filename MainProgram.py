@@ -11,6 +11,7 @@ import time
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     HP3458A_V=0
     Ag53230A_V=0
+    FLUKE_V=0
     '''Class that contains all of the functions to operate the WattBridge from the GUI.
     Creates the main GUI window as well as the Events Log window.'''
     def __init__( self, parent ):
@@ -21,7 +22,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     def CheckConnectionsOnButtonClick( self, event ):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
-        global HP3458A_V,Ag53230A_V
+        global HP3458A_V,Ag53230A_V,FLUKE_V
         self.WattBridgeEventsLog.AppendText("Setting Up Instruments and Checking Connections...\n")
         HP3458A_V = Setup.setup3458A() #Get HP3458A Visa object.
         HP3458A_V_ID = str(HP3458A_V.query('ID?')) #Check to see if HP3458A has been successfully connected.
@@ -29,7 +30,10 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         Ag53230A_V = Setup.setup53230A() #Get Ag53230A Visa object.
         Ag53230A_V_ID = str(Ag53230A_V.query('*IDN?')) #Check to see if Ag53230A has been successfully connected.
         self.WattBridgeEventsLog.AppendText(Ag53230A_V_ID)
-        self.initialiseCounter() #Initialise Ag53230A_V Frequency Counter
+        FLUKE_V = Setup.setup6105A() #Get 6105A Object (Fluke V)
+        FLUKE_V_ID = str(FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
+        self.WattBridgeEventsLog.AppendText(FLUKE_V_ID)
+        self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
@@ -66,22 +70,16 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
            Ag53230A_V.write(':inp1:rang 50')
            Ag53230A_V.write(':sens:rosc:sour int')
            if self.Channel1Filter.GetCurrentSelection()==1:
-               print("Channel 1 Filter on")
                Ag53230A_V.write(';:INP1:FILT:LPAS:STAT 1')
            else:
-               print("Channel 1 Filter off")
                Ag53230A_V.write(';:inp1:filt:lpas:stat 0')
            if self.Ch1TrigLevel.GetCurrentSelection()==0:
-               print("Ch 1 Trig Level 3V")
                Ag53230A_V.write(':inp1:coup dc;:inp1:slope pos;:inp1:lev:abs 3V;')
            elif self.Ch1TrigLevel.GetCurrentSelection()==1:
-               print("Ch 1 Trig Level 6V")
                Ag53230A_V.write(':inp1:coup dc;:inp1:slope pos;:inp1:lev:abs 6V;')
            if self.Ch2TrigLevel.GetCurrentSelection()==0:
-               print("Ch 2 Trig Level 3V")
                Ag53230A_V.write(':inp2:coup dc;:inp2:slope pos;:inp2:lev:abs 3V;')
            elif self.Ch2TrigLevel.GetCurrentSelection()==1:
-               print("Ch 2 Trig Level 6V")
                Ag53230A_V.write(':inp2:coup dc;:inp2:slope pos;:inp2:lev:abs 6V;')
            Ag53230A_V.write('DISP:TEXT "Counter Initialised"')
            time.sleep(3) #Delay for 3 seconds
