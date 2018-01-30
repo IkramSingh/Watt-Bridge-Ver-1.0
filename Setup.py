@@ -1,5 +1,6 @@
 import visa
 
+
 def setup3458A():
     '''Creates a communication link between Watt Bridge software and HP3458A DVM'''
     rm = visa.ResourceManager()
@@ -23,3 +24,10 @@ def setup6105A():
     instrument = rm.open_resource('GPIB0::17::INSTR')
     instrument.timeout = 30000
     return instrument
+    
+def setupRD31():
+    '''Creates a communication link between Watt Bridge software and RD31 Three Phase.'''
+    rm = visa.ResourceManager()
+    instrument = rm.open_resource('ASRL8::INSTR')
+    instrument.timeout = 30000
+    

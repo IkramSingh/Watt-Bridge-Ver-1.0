@@ -749,7 +749,7 @@ def setPower(ws):
     # Close RS232 6 WB
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI):
-    '''Updates the values shown in the main GUI. This is executes
+    '''Updates the values shown in the main GUI. This is executed
     simultaneously with the startNewSequence via threads.'''
     wattBridgeGUI.CurrentRow.SetValue(str(RowNumber)) #Show current Row in Excel file in main GUI to user.
     wattBridgeGUI.LineCurrent.SetValue(str(ws['BL7'].value)) #Display the Line Current value

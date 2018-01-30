@@ -7,11 +7,13 @@ from openpyxl import load_workbook
 import os.path
 import os
 import time
+from rd31direct import *
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     HP3458A_V=0
     Ag53230A_V=0
     FLUKE_V=0
+    RS232_6_WB=0
     '''Class that contains all of the functions to operate the WattBridge from the GUI.
     Creates the main GUI window as well as the Events Log window.'''
     def __init__( self, parent ):
@@ -22,7 +24,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     def CheckConnectionsOnButtonClick( self, event ):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
-        global HP3458A_V,Ag53230A_V,FLUKE_V
+        global HP3458A_V,Ag53230A_V,FLUKE_V,RS232_6_WB
         self.WattBridgeEventsLog.AppendText("Setting Up Instruments and Checking Connections...\n")
         HP3458A_V = Setup.setup3458A() #Get HP3458A Visa object.
         HP3458A_V_ID = str(HP3458A_V.query('ID?')) #Check to see if HP3458A has been successfully connected.
@@ -33,6 +35,9 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         FLUKE_V = Setup.setup6105A() #Get 6105A Object (Fluke V)
         FLUKE_V_ID = str(FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
         self.WattBridgeEventsLog.AppendText(FLUKE_V_ID)
+        RS232_6_WB = RD31 () #Get RD31 Object.
+        RS232_6_WB_ID = str(RS232_6_WB.ask(0x02,0)) #Check to see if RD31 has been successfully connected
+        self.WattBridgeEventsLog.AppendText(RS232_6_WB_ID)
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
