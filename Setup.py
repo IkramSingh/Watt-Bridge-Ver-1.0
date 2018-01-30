@@ -24,6 +24,13 @@ def setup6105A():
     instrument = rm.open_resource('GPIB0::17::INSTR')
     instrument.timeout = 30000
     return instrument
+
+def setup3478():
+    '''Creates a communication link between Watt Bridge software and HP3478A Multimeter.'''
+    rm = visa.ResourceManager()
+    instrument = rm.open_resource('GPIB0::16::INSTR')
+    instrument.timeout = 30000
+    return instrument
     
 def setupWB():
     '''Creates a communication link between Watt Bridge software and Watt Bridge.'''
