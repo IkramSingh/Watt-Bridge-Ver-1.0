@@ -25,8 +25,8 @@ def setup6105A():
     instrument.timeout = 30000
     return instrument
     
-def setupRD31():
-    '''Creates a communication link between Watt Bridge software and RD31 Three Phase.'''
+def setupWB():
+    '''Creates a communication link between Watt Bridge software and Watt Bridge.'''
     rm = visa.ResourceManager()
     instrument = rm.open_resource('ASRL8::INSTR')
     instrument.timeout = 30000

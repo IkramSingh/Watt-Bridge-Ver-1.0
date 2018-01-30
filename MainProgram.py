@@ -35,10 +35,10 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         FLUKE_V = Setup.setup6105A() #Get 6105A Object (Fluke V)
         FLUKE_V_ID = str(FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
         self.WattBridgeEventsLog.AppendText(FLUKE_V_ID)
-        RS232_6_WB = RD31 () #Get RD31 Object.
-        RS232_6_WB_ID = str(RS232_6_WB.ask(0x02,0)) #Check to see if RD31 has been successfully connected
-        RS232_6_WB.port.close() #always close port after performing a command on RD31
-        self.WattBridgeEventsLog.AppendText(RS232_6_WB_ID+"\n")
+        rd31 = RD31 () #Get RD31 Object as well as open its Serial port.
+        rd31_ID = str(rd31.ask(0x02,0)) #Check to see if RD31 has been successfully connected
+        rd31.port.close() #always close port after performing a command on RD31
+        self.WattBridgeEventsLog.AppendText(rd31_ID+"\n")
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
