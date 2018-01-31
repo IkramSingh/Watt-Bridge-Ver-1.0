@@ -5,6 +5,13 @@ import threading
 #import SwerleinFreq
 
 completedStartNewSequence=0
+#-----Instruments used in Watt Bridge Software-----#
+HP3458A_V=0
+Ag53230A_V=0
+FLUKE_V=0
+rd31=0
+HP3478A_V=0
+RS232_6_WB=0
 #-----Global Variables used by the Watt Bridge Software-----#
 flukeError=0
 FlukeErrorNumber=0
@@ -762,10 +769,19 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
     functions are executing simultaneously for the user.'''
-    global RowNumber
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,))
     t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
     t1.start()
     t2.start()
+def setInstruments(HP3458,Ag53230,FLUKE,RD31,HP3478,WB):
+    global HP3458A_V,Ag53230A_V,FLUKE_V,rd31,HP3478A_V,RS232_6_WB
+    HP3458A_V=HP3458
+    Ag53230A_V=Ag53230
+    FLUKE_V=FLUKE
+    rd31=RD31
+    HP3478A_V=HP3478
+    RS232_6_WB=WB
+def getHP3458():
+    return HP3458A_V

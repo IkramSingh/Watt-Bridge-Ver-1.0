@@ -21,24 +21,26 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
         self.WattBridgeEventsLog.AppendText("Setting Up Instruments and Checking Connections...\n")
-        HP3458A_V = Setup.setup3458A() #Get HP3458A Visa object.
-        HP3458A_V_ID = str(HP3458A_V.query('ID?')) #Check to see if HP3458A has been successfully connected.
+        self.HP3458A_V = Setup.setup3458A() #Get HP3458A Visa object.
+        HP3458A_V_ID = str(self.HP3458A_V.query('ID?')) #Check to see if HP3458A has been successfully connected.
         self.WattBridgeEventsLog.AppendText(HP3458A_V_ID)
         self.Ag53230A_V = Setup.setup53230A() #Get Ag53230A Visa object.
         Ag53230A_V_ID = str(self.Ag53230A_V.query('*IDN?')) #Check to see if Ag53230A has been successfully connected.
         self.WattBridgeEventsLog.AppendText(Ag53230A_V_ID)
-        FLUKE_V = Setup.setup6105A() #Get 6105A Visa Object (Fluke V)
-        FLUKE_V_ID = str(FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
+        self.FLUKE_V = Setup.setup6105A() #Get 6105A Visa Object (Fluke V)
+        FLUKE_V_ID = str(self.FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
         self.WattBridgeEventsLog.AppendText(FLUKE_V_ID)
-        rd31 = RD31 () #Get RD31 Object as well as open its Serial port.
-        rd31_ID = str(rd31.ask(0x02,0)) #Check to see if RD31 has been successfully connected
-        rd31.port.close() #always close port after performing a command on RD31
+        self.rd31 = RD31 () #Get RD31 Object as well as open its Serial port.
+        rd31_ID = str(self.rd31.ask(0x02,0)) #Check to see if RD31 has been successfully connected
+        self.rd31.port.close() #always close port after performing a command on RD31
         self.WattBridgeEventsLog.AppendText(rd31_ID)
-        HP3478A_V = Setup.setup3478() #Get HP3478A Visa Object
-        HP3478A_V.write('D23478A DONE.') #Display message on 3478A
-        self.WattBridgeEventsLog.AppendText("\nGo and check 3478A for message displayed. System will pause for 30 seconds...\n")
-        time.sleep(30)
-        HP3478A_V.write('D1') #Remove display to default
+        self.HP3478A_V = Setup.setup3478() #Get HP3478A Visa Object
+        self.HP3478A_V.write('D23478A DONE.') #Display message on 3478A
+        self.WattBridgeEventsLog.AppendText("\nGo and check 3478A for message '3478A DONE' being displayed. System will pause for 12 seconds...\n")
+        time.sleep(12)
+        self.HP3478A_V.write('D1') #Remove display to default
+        self.RS232_6_WB = Setup.setupWB() #Get Watt Bridge Visa object
+        StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''

@@ -31,10 +31,12 @@ def setup3478():
     instrument = rm.open_resource('GPIB0::16::INSTR')
     instrument.timeout = 30000
     return instrument
-    
+
 def setupWB():
     '''Creates a communication link between Watt Bridge software and Watt Bridge.'''
     rm = visa.ResourceManager()
-    instrument = rm.open_resource('ASRL8::INSTR')
-    instrument.timeout = 30000
+    instrument = rm.open_resource('COM12')
+    instrument.timeout = 100000
+    return instrument
+
     
