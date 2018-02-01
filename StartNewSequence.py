@@ -591,30 +591,30 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
             #Execute Test !!!Not needed functon!!!
             print("Test")
-        #Output to HP3478A_V with "F4RAN5Z1", term.=LF
+        HP3478A_V.write('F4RAN5Z1') #Output to HP3478A_V with "F4RAN5Z1", term.=LF
         time.sleep(3) #Delay for 3 seconds
-        #Output to HP3478A_V with "T3", term.=LF
-        #Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
-        #Set remote Excel link item Temperature Cell to HP3478A_V
+        HP3478A_V.write('T3') #Output to HP3478A_V with "T3", term.=LF
+        input = HP3478A_V.read() #Enter from HP3478A_V up to 256 bytes, stop on EOS=LF
+        ws['CR'+str(ActiveRow)] = input #Set remote Excel link item Temperature Cell to HP3478A_V
         wsRS31Data['A'+str(ActiveRow)]=ActiveRow #Set Row number cell in "RD31 Data" sheet to Active Row value
         for ReadingsLoop in range(NumberOfReadings):
             ReadingNumber=ReadingsLoop+1
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Doing Reading "+str(ReadingNumber)+" \n") #Update event log.
             ActiveRow=RowNumber
             time.sleep(0.5) #Delay for 0.5 seconds
-            #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+            RS232_6_WB.write('DV') #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
             #Close RS232 6 WB
-            #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
+            RS232_6_WB.write('A01') #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
             #Close RS232 6 WB
-            #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
+            RS232_6_WB.write('B01') #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
             #Close RS232 6 WB
             time.sleep(0.5) #Delay for 0.5 seconds
             Ch1GateTimeCell = ws['J'+str(ActiveRow)].value #Get Ch1 gate time cell value from Excel file.
             if Ch1GateTimeCell>0.1:
                 if wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
-                    #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
-                    #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 1'", term.=LF
-                    #Output to Ag53230A_V with ":INIT", term.=LF
+                    Ag53230A_V.write(':SENS:FREQ:GATE:TIME') #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
+                    Ag53230A_V.write(":SENS:FUNC 'FREQ 1'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 1'", term.=LF
+                    Ag53230A_V.write(":INIT") #Output to Ag53230A_V with ":INIT", term.=LF
                     print("Counter chosen is 53230A")
                 elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
                     #Output to HP3131A_V with ":sens:freq:arm:stop:tim " , Excel link, term.=LF

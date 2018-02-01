@@ -35,8 +35,8 @@ def setup3478():
 def setupWB():
     '''Creates a communication link between Watt Bridge software and Watt Bridge.'''
     rm = visa.ResourceManager()
-    instrument = rm.open_resource('COM12')
-    instrument.timeout = 100000
+    instrument = rm.open_resource("COM12")
+    instrument.timeout = 30000
     return instrument
 
     
