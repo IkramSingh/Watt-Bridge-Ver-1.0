@@ -31,7 +31,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         FLUKE_V_ID = str(self.FLUKE_V.query('*IDN?')) #Check to see if 6105A has been successfully connected
         self.WattBridgeEventsLog.AppendText(FLUKE_V_ID)
         self.rd31 = RD31 () #Get RD31 Object as well as open its Serial port.
-        rd31_ID = str(self.rd31.ask(0x02,0)) #Check to see if RD31 has been successfully connected
+        rd31_ID = str(self.rd31.ask(0x02,0,"")) #Check to see if RD31 has been successfully connected
         self.rd31.port.close() #always close port after performing a command on RD31
         self.WattBridgeEventsLog.AppendText(rd31_ID)
         self.HP3478A_V = Setup.setup3478() #Get HP3478A Visa Object

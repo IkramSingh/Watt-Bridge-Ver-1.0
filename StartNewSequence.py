@@ -768,8 +768,14 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
-    #Call RD Assign Device with 7,Prog Radian ID
-    #Call RD Inst Reset with Prog Radian ID
+    #Call RD Assign Device with 7,Prog Radian ID. This process is already done in the 'CheckConnections' function
+    #in MainProgram.py.
+    #Call RD Inst Reset with Prog Radian ID. Below are the commands for this.
+    rd31.port.open()
+    reset_1 = rd31.ask(0x07,0,"\0x02") #Resets Instantaneous Data
+    reset_2 = rd31.ask(0x07,0,"\0x04") #Resets Instantaneous Min Data
+    reset_3 = rd31.ask(0x07,0,"\0x08") #Resets Instantaneous Max Data
+    rd31.port.close()
     print('Initialise Radian')
 def setPower(ws):
     '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
