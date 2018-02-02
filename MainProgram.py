@@ -45,8 +45,9 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.RS232_6_WB.write("V0127\r")
         self.WattBridgeEventsLog.AppendText("Check and see if Watt Bridge has been set to W0721 & V0127. System will pause for 12 seconds...\n")
         time.sleep(12)
-        #StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
+        StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
+        self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()

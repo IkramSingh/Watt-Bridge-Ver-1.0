@@ -728,6 +728,8 @@ def setPower(ws):
     Shunt = ws['G'+str(ActiveRow)].value #Get the Shunt cell value from Excel sheet
     CTRatio = ws['H'+str(ActiveRow)].value #Get the CT ratio cell from Excel sheet
     HEGFreq = ws['I'+str(ActiveRow)].value #Get the Set frequency cell from Excel sheet
+    RS232_6_WB.write("DV\r")
+    time.sleep(3)
     # Open RS232 6 WB
     # Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
     # Close RS232 6 WB
@@ -743,17 +745,33 @@ def setPower(ws):
     # Close RS232 6 WB
     # Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
     # Close RS232 6 WB
+    RS232_6_WB.write("DV\r")
+    time.sleep(3)
+    RS232_6_WB.write("W0000\r")
+    time.sleep(3)
+    RS232_6_WB.write("V0000\r")
+    time.sleep(3)
+    RS232_6_WB.write("A01\r")
+    time.sleep(3)
+    RS232_6_WB.write("B01\r")
+    time.sleep(3)
     if DividerRange==60:
-        #Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
+        RS232_6_WB.write("R060\r") #Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
+        time.sleep(3)
         print("DividerRange is 60")
     else:
-        #Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
+        RS232_6_WB.write("R"+str(DividerRange)+"\r") #Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
+        time.sleep(3)
         print("DividerRange is not 60")
     # Close RS232 6 WB
     # Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
     # Close RS232 6 WB
     # Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
     # Close RS232 6 WB
+    RS232_6_WB.write("WP-\r")
+    time.sleep(3)
+    RS232_6_WB.write("VP-\r")
+    time.sleep(3)
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI):
     '''Updates the values shown in the main GUI. This is executed
@@ -768,7 +786,7 @@ def updateGUI(wattBridgeGUI):
 def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
-    functions are executing simultaneously for the user.'''
+    functions are executing simultaneously for the Suser.'''
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,))
@@ -783,5 +801,15 @@ def setInstruments(HP3458,Ag53230,FLUKE,RD31,HP3478,WB):
     rd31=RD31
     HP3478A_V=HP3478
     RS232_6_WB=WB
-def getHP3458():
+def getHP3458A():
     return HP3458A_V
+def getAg53230A():
+    return Ag53230A_V
+def getFLUKE():
+    return FLUKE_V
+def getrd31():
+    return rd31
+def getHP3478A():
+    return HP3478A_V
+def getWB():
+    return RS232_6_WB

@@ -69,7 +69,7 @@ class RD31AutocalError (Exception):
 class RD31 (meterbase.MeterBase):
     
     # Initilisation and clean-up routines
-    def __init__ (self, port="COM11"):
+    def __init__ (self, port="COM9"):
         self.port = serial.Serial (port, 57600)
         self.port.setTimeout (1)
         self.mtype = MeasurementType.FourWireStar
