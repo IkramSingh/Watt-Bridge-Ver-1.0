@@ -107,7 +107,7 @@ class RD31 (meterbase.MeterBase):
             raise IOError
         sleep (delay/1000.0)
         return data
-    def _send_packet (self, packet_type, phase, data = ""):
+    def _send_packet (self, packet_type, phase, data):
         """Construct and send a packet to the RD-31"""
         phase = phase*0xf + 0xa6
         length = len(data)
@@ -118,7 +118,7 @@ class RD31 (meterbase.MeterBase):
         trailer = pack (">H", checksum)
         output = header + data + trailer
         self.port.write (output)
-    def ask (self, packet_type, phase, data=""):
+    def ask (self, packet_type, phase, data):
         """Send a command to the RD-31 and return the response."""
         p_type = packet_type
         try:
