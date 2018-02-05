@@ -53,6 +53,8 @@ SampleTime=0
 input1=[]
 input2=[]
 input3=[]
+chanel=0
+VRangeHigh=0
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
@@ -130,40 +132,42 @@ def getExcelColumn(column):
     if column==67:
         return 'BO'
 def setupChanel(wattBridgeGUI):
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
     time.sleep(0.5) #Delay for 0.5 seconds
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
     #Store in Phase On from FLUKE_V
+    PhaseOn = FLUKE_V.query(":FITT?")
     if PhaseOn==0:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: One of the phases you have tried turn on is not fitted \n") #Update event log.
     if SourceType == "FLUHIGH":
-        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
+        FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
         #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
         #Store in Amp Fitted from FLUKE_V
+        AmpFitted = FLUKE_V.query(":FITT?")
         if AmpFitted==0:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: A 52120A unit is not fitted to the phase you have selected \n") #Update event log.
         if wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==0:
-            #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
+            FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:TERM:MODE AUTO") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
             print("AUTO")
         elif wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==1:
-            #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE HIGH", term.=LF
+            FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:TERM:MODE HIGH") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE HIGH", term.=LF
             print("HIGH")
-        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:RANG " , 0 , "," , High Current Range, term.=LF  
+        FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:RANG " +str(0)+  "," +str(HighCurrentRange)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:RANG " , 0 , "," , High Current Range, term.=LF  
     else:
         if SetAmpsCell>21:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: You have selected a current value above 21A, please use the FLUHIGH source in Excel and retry \n") #Update event log.
-        #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
-    #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
-    #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM1 " , Set amps cell , "," , Set phase cell, term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:STAT ON", term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM1 " , Set volts cell , "," , Set Volts Phase, term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM0 " , DC Voltage Offset , "," , 0, term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:STAT " , "ON", term.=LF
-    #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:STAT " , "ON", term.=LF
+        FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:RANG " +str(IRangeLow)+ "," +str(IRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
+    FLUKE_V.write("UNIT:MHAR:CURR ABS") #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
+    FLUKE_V.write("UNIT:MHAR:VOLT ABS") #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel) + ":VOLT:RANG " + "0," +str(V RangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
+    FLUKE_V.write("SOUR:PHAS"  +str(Chanel)+ ":CURR:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM1 " +str(SetAmpsCell) + "," +str(SetPhaseCell)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM1 " , Set amps cell , "," , Set phase cell, term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCCurrentOffset)+ "," +str(0)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:STAT ON", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:HARM1 " +str(SetVoltsCell)+ "," +str(SetVoltsPhase)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM1 " , Set volts cell , "," , Set Volts Phase, term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCVoltageOffset)+ "," +str(0))#Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM0 " , DC Voltage Offset , "," , 0, term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:STAT " + "ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:STAT " , "ON", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:STAT " + "ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:STAT " , "ON", term.=LF
 def setPhases():
     '''Sets the phase value.'''
     global SetPhaseCell
@@ -182,7 +186,7 @@ def powerFluke(wattBridgeGUI,ws):
     #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
     if wattBridgeGUI.Flukeramp.GetValue()<2:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
-    #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
+    FLUKE_V.write("OUTP:RAMP:TIME "+str(wattBridgeGUI.Flukeramp.GetValue())) #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
     setPhases() #Execute Set Phases function
@@ -272,8 +276,9 @@ def powerFluke(wattBridgeGUI,ws):
         setupChanel(wattBridgeGUI) #Execute Setup Chanel function 
     FlukeErrorNumber=1
     while FlukeErrorNumber!=0:
-        #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
-        #Output to FLUKE_V with "SYST:ERR?", term.=LF
+        FLUKE_V.write("SOUR:FREQ "+str(SetFrequencyCell)) #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
+        FLUKE_V.write("SYST") #Output to FLUKE_V with "SYST:ERR?", term.=LF
+        FLUKE_V.query(:ERR?)
         time.sleep(0.5) #Delay for 0.5 seconds
         #Enter from FLUKE_V(1) up to 512 bytes, stop on EOS=LF
         #Store in Fluke Error from FLUKE_V
@@ -284,9 +289,10 @@ def powerFluke(wattBridgeGUI,ws):
         #Cause error General Error code=20010, text=Vector Index
         #End If Fluke error
         FlukeErrorNumber=0 #For testing reasons. Remove when not needed.
-    #Output to FLUKE_V with "OUTP:STAT ON", term.=LF
+    FLUKE_V.write("OUTP:STAT ON")#Output to FLUKE_V with "OUTP:STAT ON", term.=LF
     time.sleep(float(wattBridgeGUI.Flukeramp.GetValue())) #Delay for Fluke Ramp (s) seconds
-    #Output to FLUKE_V with "OUTP:STAT?", term.=LF
+    FLUKE_V.write("OUTP")#Output to FLUKE_V with "OUTP:STAT?", term.=LF
+    FLUKE_V.query(":STAT?")
     time.sleep(0.5) #Delay for 0.5 seconds
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
     #Store in Is Fluke Off from FLUKE_V
@@ -331,11 +337,11 @@ def powerCH5500(ws):
     time.sleep(60) #Delay for 60 seconds
 def setUpFFTVoltsAndPhase():
     global SampleData
-    SampleData=0 #Clear sample data
+    SampleData=[] #Clear sample data
     time.sleep(2) #Delay for 2 seconds
     for FFTLoop in range(256):
-        #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
-        #Append to Sample Data from HP3458A_V
+        output = HP3458A_V.read() #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
+        SampleData.append(output) #Append to Sample Data from HP3458A_V
         print("FFTLoop")
     FFTFreqy = 1/SampleTime
     #Calculate FFT with freq=FFT freqy wave=Sample Data
@@ -348,9 +354,9 @@ def setUpFFT():
     global SampleTime
     UncalFreqy = "Testing"#SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
     SampleTime = 9/(256*UncalFreqy)
-    #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
-    #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
-    #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
+    HP3458A_V.write("preset fast;mem fifo;mformat sint;oformat ascii") #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
+    HP3458A_V.write("ssdc ;range 10;ssrc ext") #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
+    HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
 def findDialSettings(wattBridgeGUI,ws):
     '''Obtains the Dial setting from the Excel sheet and executes the setUpFFT 
     and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
@@ -700,11 +706,10 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     HP3131A_V="Testing"
                     ws[getExcelColumn(38+7*(ReadingNumber-1))+str(ActiveRow)]=HP3131A_V
                 elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
-                    #Output to Ag53230A_V with "fetc?", term.=LF
+                    output = Ag53230A_V.write('fetc?') #Output to Ag53230A_V with "fetc?", term.=LF
                     time.sleep(0.25) #Delay for 0.25 seconds
                     #Enter from Ag53230A_V up to 256 bytes, stop on EOS=LF
-                    Ag53230A_V="Testing"
-                    ws[getExcelColumn(38+7*(ReadingNumber-1))+str(ActiveRow)]=Ag53230A_V
+                    ws[getExcelColumn(38+7*(ReadingNumber-1))+str(ActiveRow)] = output
                 if wattBridgeGUI.CounterChannel.GetCurrentSelection()==0:
                     if wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
                         #Output to HP3131A_V with ":sens:freq:arm:stop:tim " , Excel link, term.=LF
@@ -715,20 +720,19 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                         HP3131A_V="Testing"
                         ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=HP3131A_V
                     elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
-                        #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
-                        #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 2'", term.=LF
-                        #Output to Ag53230A_V with ":read?", term.=LF
+                        Ag53230A_V.write(':SENS:FREQ:GATE:TIME '+str(GateTime))#Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
+                        Ag53230A_V.write(":SENS:FUNC 'FREQ 2'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 2'", term.=LF
+                        output = Ag53230A_V.write(':read?') #Output to Ag53230A_V with ":read?", term.=LF
                         time.sleep(2) #Delay for 2 seconds
                         #Enter from Ag53230A_V up to 256 bytes, stop on EOS=LF
-                        Ag53230A_V="Testing"
-                        ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=Ag53230A_V
+                        ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)] = output
                 else:
                     if WattsOrVarsCell[0]=="v": #If it is vars
-                        #Call RD Get Instantaneous Data with Prog Radian ID,0,4,RD31 Total
+                        inst_metric = rd31._get_metric(4) #Call RD Get Instantaneous Data with Prog Radian ID,0,4,RD31 Total
                         #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
                         print("WattsOrVars: vars")
                     elif WattsOrVarsCell[0]=="w": #If it is watts
-                        #RD Get Instantaneous Data with Prog Radian ID,0,2,RD31 Total
+                        inst_metric = rd31._get_metric(2) #RD Get Instantaneous Data with Prog Radian ID,0,2,RD31 Total
                         #RD Get Error Message with Prog Radian ID,RD 31 Error Message
                         print("WattsOrVars: watt")
                     RD31Total="Testing"
