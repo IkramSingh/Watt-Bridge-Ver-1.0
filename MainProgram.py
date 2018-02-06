@@ -57,6 +57,8 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     def saveSpreadsheet(self):
         '''Saves the Excel file that was initially setup in the setupSpreadsheet function.'''
         self.WattBridgeEventsLog.AppendText("Saving Spreadsheet...\n") #Inform the user.
+        self.ws['D23'] = 2
+        self.ws['E24'] = self.ws['E23'].value
         self.wb.template=False #Make sure Excel file is saved as document not template
         self.wb.save(self.filename) #Save file with same name
         self.WattBridgeEventsLog.AppendText("Spreadsheet saved successfully\n") #Inform the user.
@@ -70,8 +72,8 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Creates a link between the software and Excel sheet.'''
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
-        self.filename="Book1.xlsx" #Excel filename
-        self.wb=load_workbook(self.filename) #Open Excel file
+        self.filename="TestPoint_Run_16_Jan_2018.xlsm" #Excel filename
+        self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
         self.ws=self.wb.active #Make it active to work in
         self.wsRS31Data = self.wb.worksheets[1] #Second worksheet titled "RD31 Data"
         print("Spreadsheet setup successfully \n")

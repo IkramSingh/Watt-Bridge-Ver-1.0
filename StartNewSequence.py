@@ -159,7 +159,7 @@ def setupChanel(wattBridgeGUI):
         FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:RANG " +str(IRangeLow)+ "," +str(IRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
     FLUKE_V.write("UNIT:MHAR:CURR ABS") #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
     FLUKE_V.write("UNIT:MHAR:VOLT ABS") #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
-    FLUKE_V.write("SOUR:PHAS" +str(Chanel) + ":VOLT:RANG " + "0," +str(V RangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel) + ":VOLT:RANG " + "0," +str(VRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
     FLUKE_V.write("SOUR:PHAS"  +str(Chanel)+ ":CURR:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM1 " +str(SetAmpsCell) + "," +str(SetPhaseCell)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM1 " , Set amps cell , "," , Set phase cell, term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCCurrentOffset)+ "," +str(0)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
@@ -278,7 +278,7 @@ def powerFluke(wattBridgeGUI,ws):
     while FlukeErrorNumber!=0:
         FLUKE_V.write("SOUR:FREQ "+str(SetFrequencyCell)) #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
         FLUKE_V.write("SYST") #Output to FLUKE_V with "SYST:ERR?", term.=LF
-        FLUKE_V.query(:ERR?)
+        FLUKE_V.query(":ERR?")
         time.sleep(0.5) #Delay for 0.5 seconds
         #Enter from FLUKE_V(1) up to 512 bytes, stop on EOS=LF
         #Store in Fluke Error from FLUKE_V
