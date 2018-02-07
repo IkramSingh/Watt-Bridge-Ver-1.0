@@ -588,12 +588,16 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             RDPhase=Phase123Cell
         WattsOrVarsCell = str(ws['M'+str(ActiveRow)].value)#Obtain watts/vars value from Excel sheet
         if WattsOrVarsCell[0]=="v": #If it is vars
-            #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
-            #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            rd31.port.open()
+            rd31.set_pulse_output(1, 0, RDPhase) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
+            rd31.port.close() #always close port after performing a command on RD31
+            status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
             print("WattsOrVars: vars")
         elif WattsOrVarsCell[0]=="w": #If it is watts
-            #Set Radian output pulse with Prog Radian ID,1,0,RD phase
-            #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            rd31.port.open()
+            rd31.set_pulse_output(0, 0, RDPhase) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
+            rd31.port.close() #always close port after performing a command on RD31
+            status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
             print("WattsOrVars: watt")
         if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
             #Output to HP3488A_V with "CRESET 4", term.=LF

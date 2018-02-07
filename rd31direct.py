@@ -141,7 +141,9 @@ class RD31 (meterbase.MeterBase):
         pass # We don't have user-settable voltage ranges.
     def set_measurement_type (self, mtype):
         self.mtype = mtype
-        
+    def set_pulse_output(self, metric, status, pulse_output):
+        outdata = pack (">HBI", metric, status, pulse_output)
+        self._send_packet(0x32,0,outdata)
     def _get_metric (self, function):
         outdata = pack (">HH", function, 0xfffd)
         indata = self.ask (0x2E, 0, outdata)

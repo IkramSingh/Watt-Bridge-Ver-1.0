@@ -57,8 +57,6 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     def saveSpreadsheet(self):
         '''Saves the Excel file that was initially setup in the setupSpreadsheet function.'''
         self.WattBridgeEventsLog.AppendText("Saving Spreadsheet...\n") #Inform the user.
-        self.ws['D23'] = 2
-        self.ws['E24'] = self.ws['E23'].value
         self.wb.template=False #Make sure Excel file is saved as document not template
         self.wb.save(self.filename) #Save file with same name
         self.WattBridgeEventsLog.AppendText("Spreadsheet saved successfully\n") #Inform the user.
