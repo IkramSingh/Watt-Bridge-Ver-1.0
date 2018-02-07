@@ -182,9 +182,10 @@ def setPhases():
 def powerFluke(wattBridgeGUI,ws):
     global SetVoltsCell,SetPhaseCell,SetAmpsCell,SetFrequencyCell,VRangeHigh,DCVoltageOffset
     global HighCurrentRange,DCCurrentOffset,IRangeLow,IRangeHigh,Chanel,SetVoltsPhase,FlukeErrorNumber
-    #Output to FLUKE_V with "*CLS", term.=LF
-    #Output to FLUKE_V with "*RST", term.=LF
-    #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
+    global flukeError
+    FLUKE_V.write("*CLS") #Output to FLUKE_V with "*CLS", term.=LF
+    FLUKE_V.write("*RST") #Output to FLUKE_V with "*RST", term.=LF
+    FLUKE_V.write("OUTP:SENS 0") #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
     if wattBridgeGUI.Flukeramp.GetValue()<2:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
     FLUKE_V.write("OUTP:RAMP:TIME "+str(wattBridgeGUI.Flukeramp.GetValue())) #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
@@ -279,27 +280,22 @@ def powerFluke(wattBridgeGUI,ws):
     while FlukeErrorNumber!=0:
         FLUKE_V.write("SOUR:FREQ "+str(SetFrequencyCell)) #Output to FLUKE_V with "SOUR:FREQ " , Set frequency cell, term.=LF
         FLUKE_V.write("SYST") #Output to FLUKE_V with "SYST:ERR?", term.=LF
-        FLUKE_V.query(":ERR?")
-        time.sleep(0.5) #Delay for 0.5 seconds
         #Enter from FLUKE_V(1) up to 512 bytes, stop on EOS=LF
-        #Store in Fluke Error from FLUKE_V
+        flukeError = FLUKE_V.query(":ERR?") #Store in Fluke Error from FLUKE_V
+        time.sleep(0.5) #Delay for 0.5 seconds
         #Calculate Vector Index with v=Fluke Error i=0
-        #Store in Fluke Error number from Vector Index
-        #If/Then Fluke error with x=Fluke Error number
-        #Calculate Vector Index with v=Fluke Error i=1
-        #Cause error General Error code=20010, text=Vector Index
-        #End If Fluke error
-        FlukeErrorNumber=0 #For testing reasons. Remove when not needed.
+        FlukeErrorNumber = flukeError[0] #Store in Fluke Error number from Vector Index
+        if FlukeErrorNumber!=0: #If/Then Fluke error with x=Fluke Error number
+            VectorIndex = flukeError[1]#Calculate Vector Index with v=Fluke Error i=1
+            wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: " + str(VectorIndex)+ "\n") #Update event log. #Cause error General Error code=20010, text=Vector Index
     FLUKE_V.write("OUTP:STAT ON")#Output to FLUKE_V with "OUTP:STAT ON", term.=LF
     time.sleep(float(wattBridgeGUI.Flukeramp.GetValue())) #Delay for Fluke Ramp (s) seconds
     FLUKE_V.write("OUTP")#Output to FLUKE_V with "OUTP:STAT?", term.=LF
-    FLUKE_V.query(":STAT?")
-    time.sleep(0.5) #Delay for 0.5 seconds
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
-    #Store in Is Fluke Off from FLUKE_V
-    #If/Then Fluke not On with x=Is Fluke Off
-    #Cause error Power Not On code=20006, text="Power output unsuccessful. Check connections."
-    #End If Fluke not On
+    isFlukeOff = FLUKE_V.query(":STAT?") #Store in Is Fluke Off from FLUKE_V
+    time.sleep(0.5) #Delay for 0.5 seconds
+    if isFlukeOff < 0.5: #If/Then Fluke not On with x=Is Fluke Off
+        wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Power output unsuccessful. Check connections. \n") #Update event log. 
     time.sleep(30) #Delay for 30 seconds
 def powerCH5500(ws):
     global CHType
