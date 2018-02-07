@@ -53,6 +53,7 @@ SampleTime=0
 input1=[]
 input2=[]
 input3=[]
+inputTotal=[]
 chanel=0
 VRangeHigh=0
 #---------------------------------------------------#
@@ -498,18 +499,21 @@ def loadDialSettings(ws):
     ws['AF'+str(ActiveRow)] = VSign
 
 def readRadian2(ReadingsLoop,wsRS31Data):
-    global input1,input2,input3
-    input1=[] #Clear input1
-    input2=[] #Clear input2
-    input3=[] #Clear input3
+    global input1,input2,input3,inputTotal
+    input1=[] #Clear input 1
+    input2=[] #Clear input 2
+    input3=[] #Clear input 3
+    inputTotal=[] #Clear Input Total
     for ReadRadLoop in range(7):
-        #Call RD Get All Instant Data with Prog Radian ID,ReadRad loop,Rad Ph A,Rad Ph B,Rad Ph C,Rad Ph Neutral,Rad Ph Net
-        #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-        #Append to Input 1 from Rad Ph A
-        #Append to Input 2 from Rad Ph B
-        #Append to Input 3 from Rad Ph C
-        #ppend to Input Total from Rad Ph Net
+        rd31.port.open()
+        data = rd31._get_metric(ReadRadLoop) #Call RD Get All Instant Data with Prog Radian ID,ReadRad loop,Rad Ph A,Rad Ph B,Rad Ph C,Rad Ph Neutral,Rad Ph Net
+        status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+        input1.append(data[0]) #Append to Input 1 from Rad Ph A
+        input2.append(data[1]) #Append to Input 2 from Rad Ph B
+        input3.append(data[2]) #Append to Input 3 from Rad Ph C
+        inputTotal.append(data[4]) #Append to Input Total from Rad Ph Net
         print("ReadRadLoop")
+    rd31.port.close()
     colOffset = 26+(ReadingsLoop*28)
     for WriteRadToExcel in range (7):
         #Calculate Input 1 Cell with row=Active Row offset=col offset loop=write Rad to exel
@@ -733,11 +737,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                 else:
                     if WattsOrVarsCell[0]=="v": #If it is vars
                         inst_metric = rd31._get_metric(4) #Call RD Get Instantaneous Data with Prog Radian ID,0,4,RD31 Total
-                        #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
                         print("WattsOrVars: vars")
                     elif WattsOrVarsCell[0]=="w": #If it is watts
                         inst_metric = rd31._get_metric(2) #RD Get Instantaneous Data with Prog Radian ID,0,2,RD31 Total
-                        #RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        status = rd31.ask(0x20,0,"") #RD Get Error Message with Prog Radian ID,RD 31 Error Message
                         print("WattsOrVars: watt")
                     RD31Total="Testing"
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)]=RD31Total

@@ -147,8 +147,8 @@ class RD31 (meterbase.MeterBase):
     def _get_metric (self, function):
         outdata = pack (">HH", function, 0xfffd)
         indata = self.ask (0x2E, 0, outdata)
-        (dataA, dataB, dataC, dataNet, dummy) = unpack (">IIIII", indata)
-        return (TItofloat (dataA), TItofloat (dataB), TItofloat (dataC), TItofloat (dataNet),)
+        (dataA, dataB, dataC, dataNeutral, dataNet) = unpack (">IIIII", indata)
+        return (TItofloat (dataA), TItofloat (dataB), TItofloat (dataC), TItofloat (dataNeutral), TItofloat (dataNet))
     def _get_metric_list (self, function, phases):
         values = self._get_metric (function)
         try:
