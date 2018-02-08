@@ -138,6 +138,7 @@ def getExcelColumn(column):
 ##     if column==67:
 ##         return 'BO'
 def setupChanel(wattBridgeGUI):
+    '''Sends various commands to the FLUKE power supply.'''
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
     time.sleep(0.5) #Delay for 0.5 seconds
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
@@ -166,7 +167,7 @@ def setupChanel(wattBridgeGUI):
     FLUKE_V.write("UNIT:MHAR:CURR ABS") #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
     FLUKE_V.write("UNIT:MHAR:VOLT ABS") #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel) + ":VOLT:RANG " + "0," +str(VRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:RANG " , "0," , V RangeHigh , term.=LF
-    FLUKE_V.write("SOUR:PHAS"  +str(Chanel)+ ":CURR:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:STAT ON", term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM1 " +str(SetAmpsCell) + "," +str(SetPhaseCell)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM1 " , Set amps cell , "," , Set phase cell, term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCCurrentOffset)+ "," +str(0)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:STAT ON", term.=LF
@@ -185,6 +186,7 @@ def setPhases():
             Sum = SetPhaseCell+360
             SetPhaseCell = Sum
 def powerFluke(wattBridgeGUI,ws):
+    '''Checks to see if the settings being sent to the FLUKE power supply are suitable.'''
     global SetVoltsCell,SetPhaseCell,SetAmpsCell,SetFrequencyCell,VRangeHigh,DCVoltageOffset
     global HighCurrentRange,DCCurrentOffset,IRangeLow,IRangeHigh,Chanel,SetVoltsPhase,FlukeErrorNumber
     global flukeError
@@ -338,6 +340,8 @@ def powerCH5500(ws):
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
 def setUpFFTVoltsAndPhase():
+    '''Calculates the Fast Fourier Transform (both magnitude and phase vectors) of the data from the 3458A.
+    The FFT voltage and phase are obtained from from these vectors.'''
     global SampleData,FFTVolts,FFTPhase
     SampleData=[] #Clear sample data
     time.sleep(2) #Delay for 2 seconds
@@ -486,6 +490,8 @@ def loadDialSettings(ws):
     ws['AF'+str(ActiveRow)] = VSign
 
 def readRadian2(ReadingsLoop,wsRS31Data):
+    '''Obtain the metric values from the RD31 beloning to the phase inputs. These are added into the RD31Data sheet in
+    the Excel file.'''
     global input1,input2,input3,inputTotal
     input1=[] #Clear input 1
     input2=[] #Clear input 2
@@ -759,6 +765,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
 def initialiseRadian():
+    '''Resets the Instantaneous Data, Min Data and Max Data in the RD31.'''
     #Call RD Assign Device with 7,Prog Radian ID. This process is already done in the 'CheckConnections' function
     #in MainProgram.py.
     #Call RD Inst Reset with Prog Radian ID. Below are the commands for this.
@@ -833,6 +840,7 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     t1.start()
     t2.start()
 def setInstruments(HP3458,Ag53230,FLUKE,RD31,HP3478,WB):
+    '''Store the VISA/Port objects belonging to all of the instruments within this class.'''
     global HP3458A_V,Ag53230A_V,FLUKE_V,rd31,HP3478A_V,RS232_6_WB
     HP3458A_V=HP3458
     SwerleinFreq.setInstrument(HP3458)
@@ -842,14 +850,20 @@ def setInstruments(HP3458,Ag53230,FLUKE,RD31,HP3478,WB):
     HP3478A_V=HP3478
     RS232_6_WB=WB
 def getHP3458A():
+    '''Obtain the 3458A instrument.'''
     return HP3458A_V
 def getAg53230A():
+    '''Obtain the 53230A instrument.'''
     return Ag53230A_V
 def getFLUKE():
+    '''Obtain the FLUKE power supply instrument.'''
     return FLUKE_V
 def getrd31():
+    '''Obtain the RD31 Three Phase instrument.'''
     return rd31
 def getHP3478A():
+    '''Obtain the 3478A instrument.'''
     return HP3478A_V
 def getWB():
+    '''Obtain the Watt Bridge instrument.'''
     return RS232_6_WB

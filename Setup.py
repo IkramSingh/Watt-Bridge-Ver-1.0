@@ -19,7 +19,7 @@ def setup53230A():
     return instrument
     
 def setup6105A():
-    '''Creates a communication link between Watt Bridge software and 6105A POwer Source.'''
+    '''Creates a communication link between Watt Bridge software and 6105A Power Source.'''
     rm = visa.ResourceManager()
     instrument = rm.open_resource('GPIB0::17::INSTR')
     instrument.timeout = 30000
