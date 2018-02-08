@@ -671,17 +671,14 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             FFTPhase="Testing"
             ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the FFT ref volts value in Excel sheet.
             ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the FFT ref phase value in Excel sheet.
-            #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
             #Close RS232 6 WB
-            #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
             #Close RS232 6 WB
-            #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             #Close RS232 6 WB
-            RS232_6_WB.write("DD\r")
+            RS232_6_WB.write("DD\r") #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
             time.sleep(3)
-            RS232_6_WB.write("A33\r")
+            RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
             time.sleep(3)
-            RS232_6_WB.write("B33\r")
+            RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             time.sleep(3)
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
             setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
@@ -743,17 +740,14 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         elif SourceType=="FLUKE" or SourceType=="FLUHIGH":
            #Output to FLUKE_V with "OUTP:STAT OFF", term.=LF 
            print("SourceType = FLUKE or SourceType = FLUHIGH")
-        #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
         #Close RS232 6 WB
-        #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
         #Close RS232 6 WB
-        #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
         #Close RS232 6 WB
-        RS232_6_WB.write("DV\r")
+        RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
         time.sleep(3)
-        RS232_6_WB.write("A01\r")
+        RS232_6_WB.write("A01\r") #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
         time.sleep(3)
-        RS232_6_WB.write("B01\r")
+        RS232_6_WB.write("B01\r") #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
         time.sleep(3)
         time.sleep(1) #Delay for 1 second
         pasteResults(ws) #Execute Paste Results function
@@ -773,7 +767,6 @@ def initialiseRadian():
     reset_2 = rd31.ask(0x07,0,"\0x04") #Resets Instantaneous Min Data
     reset_3 = rd31.ask(0x07,0,"\0x08") #Resets Instantaneous Max Data
     rd31.port.close()
-    print('Initialise Radian')
 def setPower(ws):
     '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
     various commands to the "RS232 6 WB".'''
@@ -787,27 +780,21 @@ def setPower(ws):
     # Open RS232 6 WB
     # Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    RS232_6_WB.write("DV\r")
+    RS232_6_WB.write("DV\r") # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("W0000\r")
+    RS232_6_WB.write("W0000\r") # Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("V0000\r")
+    RS232_6_WB.write("V0000\r") # Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("A01\r")
+    RS232_6_WB.write("A01\r") # Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("B01\r")
+    RS232_6_WB.write("B01\r") # Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
     time.sleep(3)
     if DividerRange==60:
         RS232_6_WB.write("R060\r") #Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
@@ -818,13 +805,11 @@ def setPower(ws):
         time.sleep(3)
         print("DividerRange is not 60")
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    # Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
     # Close RS232 6 WB
-    RS232_6_WB.write("WP-\r")
+    RS232_6_WB.write("WP-\r") # Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("VP-\r")
+    RS232_6_WB.write("VP-\r") # Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
     time.sleep(3)
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI):
