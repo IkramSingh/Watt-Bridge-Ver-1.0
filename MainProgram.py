@@ -7,6 +7,7 @@ from openpyxl import load_workbook
 import os.path
 import os
 import time
+import SwerleinFreq
 from rd31direct import *
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
@@ -43,6 +44,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.RS232_6_WB.write("W0721\r")
         time.sleep(3)
         self.RS232_6_WB.write("V0127\r")
+        time.sleep(3)
         self.WattBridgeEventsLog.AppendText("Check and see if Watt Bridge has been set to W0721 & V0127. System will pause for 12 seconds...\n")
         time.sleep(12)
         StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class

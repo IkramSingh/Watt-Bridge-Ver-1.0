@@ -11,6 +11,12 @@ import matplotlib.pyplot as plt
 #-----Global Variable for Swerlein Measurements-----#
 instrument=0
 #---------------------------------------------------#
+def setInstrument(HP3458A_V):
+    global instrument
+    instrument = HP3458A_V
+def get3458A():
+    return instrument
+
 def FNFreq():
     global instrument
     Expect = float(instrument.query('FREQ')) #read frequency of signal

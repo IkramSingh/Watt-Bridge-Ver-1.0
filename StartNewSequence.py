@@ -4,7 +4,7 @@ import time
 import threading
 import numpy as np
 import xlsxwriter
-#import SwerleinFreq
+import SwerleinFreq
 
 completedStartNewSequence=0
 #-----Instruments used in Watt Bridge Software-----#
@@ -835,6 +835,7 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
 def setInstruments(HP3458,Ag53230,FLUKE,RD31,HP3478,WB):
     global HP3458A_V,Ag53230A_V,FLUKE_V,rd31,HP3478A_V,RS232_6_WB
     HP3458A_V=HP3458
+    SwerleinFreq.setInstrument(HP3458)
     Ag53230A_V=Ag53230
     FLUKE_V=FLUKE
     rd31=RD31
