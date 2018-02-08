@@ -2,6 +2,8 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 import time
 import threading
+import numpy as np
+import xlsxwriter
 #import SwerleinFreq
 
 completedStartNewSequence=0
@@ -61,77 +63,80 @@ VRangeHigh=0
 DCVRange=0
 ActiveRow=0
 def getExcelColumn(column):
-    '''Returns the character form of the column parameter passed in.'''
-    if column==35:
-        return 'AI'
-    if column==36:
-        return 'AJ'
-    if column==37:
-        return 'AK'
-    if column==33:
-        return 'AG'
-    if column==34:
-        return 'AH'
-    if column==42:
-        return 'AP'
-    if column==43:
-        return 'AQ'
-    if column==44:
-        return 'AR'
-    if column==40:
-        return 'AN'
-    if column==41:
-        return 'AO'
-    if column==38:
-        return 'AL'
-    if column==45:
-        return 'AS'
-    if column==39:
-        return 'AM'
-    if column==46:
-        return 'AT'
-    if column==47:
-        return 'AU'
-    if column==48:
-        return 'AV'
-    if column==49:
-        return 'AW'
-    if column==50:
-        return 'AX'
-    if column==51:
-        return 'AY'
-    if column==52:
-        return 'AZ'
-    if column==53:
-        return 'BA'
-    if column==54:
-        return 'BB'
-    if column==55:
-        return 'BC'
-    if column==56:
-        return 'BD'
-    if column==57:
-        return 'BE'
-    if column==58:
-        return 'BF'
-    if column==59:
-        return 'BG'
-    if column==60:
-        return 'BH'
-    if column==61:
-        return 'BI'
-    if column==62:
-        return 'BJ'
-    if column==63:
-        return 'BK'
-    if column==64:
-        return 'BL'
-    if column==65:
-        return 'BM'
-    if column==66:
-        return 'BN'
-    if column==67:
-        return 'BO'
+    columnCharacter = str(xlsxwriter.utility.xl_col_to_name(column-1))
+    return columnCharacter
+## def getExcelColumn(column):
+##     '''Returns the character form of the column parameter passed in.'''
+##     if column==35:
+##         return 'AI'
+##     if column==36:
+##         return 'AJ'
+##     if column==37:
+##         return 'AK'
+##     if column==33:
+##         return 'AG'
+##     if column==34:
+##         return 'AH'
+##     if column==42:
+##         return 'AP'
+##     if column==43:
+##         return 'AQ'
+##     if column==44:
+##         return 'AR'
+##     if column==40:
+##         return 'AN'
+##     if column==41:
+##         return 'AO'
+##     if column==38:
+##         return 'AL'
+##     if column==45:
+##         return 'AS'
+##     if column==39:
+##         return 'AM'
+##     if column==46:
+##         return 'AT'
+##     if column==47:
+##         return 'AU'
+##     if column==48:
+##         return 'AV'
+##     if column==49:
+##         return 'AW'
+##     if column==50:
+##         return 'AX'
+##     if column==51:
+##         return 'AY'
+##     if column==52:
+##         return 'AZ'
+##     if column==53:
+##         return 'BA'
+##     if column==54:
+##         return 'BB'
+##     if column==55:
+##         return 'BC'
+##     if column==56:
+##         return 'BD'
+##     if column==57:
+##         return 'BE'
+##     if column==58:
+##         return 'BF'
+##     if column==59:
+##         return 'BG'
+##     if column==60:
+##         return 'BH'
+##     if column==61:
+##         return 'BI'
+##     if column==62:
+##         return 'BJ'
+##     if column==63:
+##         return 'BK'
+##     if column==64:
+##         return 'BL'
+##     if column==65:
+##         return 'BM'
+##     if column==66:
+##         return 'BN'
+##     if column==67:
+##         return 'BO'
 def setupChanel(wattBridgeGUI):
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
     time.sleep(0.5) #Delay for 0.5 seconds
@@ -333,7 +338,7 @@ def powerCH5500(ws):
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
 def setUpFFTVoltsAndPhase():
-    global SampleData
+    global SampleData,FFTVolts,FFTPhase
     SampleData=[] #Clear sample data
     time.sleep(2) #Delay for 2 seconds
     for FFTLoop in range(256):
@@ -341,11 +346,11 @@ def setUpFFTVoltsAndPhase():
         SampleData.append(output) #Append to Sample Data from HP3458A_V
         print("FFTLoop")
     FFTFreqy = 1/SampleTime
-    #Calculate FFT with freq=FFT freqy wave=Sample Data
-    #Calculate MagnitudeVector with spectrum=FFT
-    #Calculate PhaseVector with spectrum=FFT
-    #Calculate FFT Volts with n=9 V=MagnitudeVector
-    #Calculate FFT Phase with n=9 V=PhaseVector
+    FFT = np.fft.fft(SampleData) #Calculate FFT with freq=FFT freqy wave=Sample Data
+    MagnitudeVector = np.abs(FFT) #Calculate MagnitudeVector with spectrum=FFT
+    PhaseVector = np.angle(FFT) #Calculate PhaseVector with spectrum=FFT
+    FFTVolts = MagnitudeVector[9] #Calculate FFT Volts with n=9 V=MagnitudeVector
+    FFTPhase = PhaseVector[9] #Calculate FFT Phase with n=9 V=PhaseVector
 def setUpFFT():
     '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
     global SampleTime
@@ -400,33 +405,26 @@ def refineDialSettings(wattBridgeGUI,ws):
     VCount = ws['BR7'].value
     WSign = ws['BQ7'].value
     VSign = ws['BS7'].value
-    #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    RS232_6_WB.write("DV\r")
+    RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("W"+str(WCount)+"\r")
+    RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("V"+str(VCount)+"\r")
+    RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write(str(WSign)+"\r")
+    RS232_6_WB.write(str(WSign)+"\r") #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write(str(VSign)+"\r")
+    RS232_6_WB.write(str(VSign)+"\r") #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("A33\r")
+    RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("B33\r")
+    RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
     time.sleep(3)
     WattsDial = int(WCount)/1024
     VarsDial = int(VCount)/1024
@@ -442,13 +440,11 @@ def refineDialSettings(wattBridgeGUI,ws):
     VarsDial = int(VCount)/1024
     WCount = ws['BP7'].value
     VCount = ws['BR7'].value
-    #Output to RS232 6 WB with "W" , WCount), term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    RS232_6_WB.write("W"+str(WCount)+"\r")
+    RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount), term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("V"+str(VCount)+"\r")
+    RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     time.sleep(3)
     ws['AC'+str(ActiveRow)] = WattsDial
     ws['AD'+str(ActiveRow)] = WSign
@@ -457,35 +453,30 @@ def refineDialSettings(wattBridgeGUI,ws):
     updateGUI(wattBridgeGUI)
 def loadDialSettings(ws):
     '''Loads all of the Dial settings from the Excel sheet.'''
-    #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     #Close RS232 6 WB
+    RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
+    time.sleep(3)
     WCount = ws['BP7'].value
     VCount = ws['BR7'].value
     WSign = ws['BQ7'].value
     VSign = ws['BS7'].value
-    #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
     #Close RS232 6 WB
-    RS232_6_WB.write("W"+str(WCount)+"\r")
+    RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("V"+str(VCount)+"\r")
+    RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write(str(WSign)+"\r")
+    RS232_6_WB.write(str(WSign)+"\r") #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write(str(VSign)+"\r")
+    RS232_6_WB.write(str(VSign)+"\r") #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("A33\r")
+    RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
     time.sleep(3)
-    RS232_6_WB.write("B33\r")
+    RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
     time.sleep(3)
     WattsDial = int(WCount)/1024
     VarsDial = int(VCount)/1024
@@ -503,28 +494,26 @@ def readRadian2(ReadingsLoop,wsRS31Data):
     for ReadRadLoop in range(7):
         rd31.port.open()
         data = rd31._get_metric(ReadRadLoop) #Call RD Get All Instant Data with Prog Radian ID,ReadRad loop,Rad Ph A,Rad Ph B,Rad Ph C,Rad Ph Neutral,Rad Ph Net
+        rd31.port.close()
         status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
         input1.append(data[0]) #Append to Input 1 from Rad Ph A
         input2.append(data[1]) #Append to Input 2 from Rad Ph B
         input3.append(data[2]) #Append to Input 3 from Rad Ph C
         inputTotal.append(data[4]) #Append to Input Total from Rad Ph Net
-        print("ReadRadLoop")
-    rd31.port.close()
-    colOffset = 26+(ReadingsLoop*28)
+    colOffset = -26+(ReadingsLoop*28)
     for WriteRadToExcel in range (7):
         #Calculate Input 1 Cell with row=Active Row offset=col offset loop=write Rad to exel
-        #Calculate Rad data 2 write with vector=Input 1 loop=write Rad to exel
-        #Set remote Excel link RD31 Data item Input 1 Cell to Rad data 2 write
+        RadData2Write = input1[WriteRadToExcel] #Calculate Rad data 2 write with vector=Input 1 loop=write Rad to exel
+        wsRS31Data[getExcelColumn(colOffset+WriteRadToExcel)+str(ActiveRow)] = RadData2Write #Set remote Excel link RD31 Data item Input 1 Cell to Rad data 2 write
         #Calculate Input 2 Cell with row=Active Row offset=col offset loop=write Rad to exel
-        #Calculate Rad data 2 write with vector=Input 2 loop=write Rad to exel
-        #Set remote Excel link RD31 Data item Input 2 Cell to Rad data 2 write
+        RadData2Write = input2[WriteRadToExcel] #Calculate Rad data 2 write with vector=Input 2 loop=write Rad to exel
+        wsRS31Data[getExcelColumn(colOffset+WriteRadToExcel+7)+str(ActiveRow)] = RadData2Write #Set remote Excel link RD31 Data item Input 2 Cell to Rad data 2 write
         #Calculate Input 3 Cell with row=Active Row offset=col offset loop=write Rad to exel
-        #Calculate Rad data 2 write with vector=Input 3 loop=write Rad to exel
-        #Set remote Excel link RD31 Data item Input 3 Cell to Rad data 2 write
+        RadData2Write = input3[WriteRadToExcel] #Calculate Rad data 2 write with vector=Input 3 loop=write Rad to exel
+        wsRS31Data[getExcelColumn(colOffset+WriteRadToExcel+14)+str(ActiveRow)] = RadData2Write #Set remote Excel link RD31 Data item Input 3 Cell to Rad data 2 write
         #Calculate Total Cell with row=Active Row offset=col offset loop=write Rad to exel
-        #Calculate Rad data 2 write with vector=Input Total loop=write Rad to exel
-        #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
-        print("WriteRadToExcel")
+        RadData2Write = inputTotal[WriteRadToExcel] #Calculate Rad data 2 write with vector=Input Total loop=write Rad to exel
+        wsRS31Data[getExcelColumn(colOffset+WriteRadToExcel+21)+str(ActiveRow)] = RadData2Write #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
 def pasteResults(ws):
     '''Obtains all of the calculated values such as MeanVolts etc from
     the Excel sheet and then places them within the ActiveRow lines
@@ -699,7 +688,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)]=FFTVolts #Set the Det volts value in Excel sheet.
             ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)]=FFTPhase #Set the Det phase value in Excel sheet.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Read RD31 \n") #Update event log.
-            readRadian2(ReadingsLoop,wsRS31Data) #Execute Read Radian2 function.
+            readRadian2(ReadingNumber,wsRS31Data) #Execute Read Radian2 function.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Counter \n") #Update event log.
             GateTime = Ch1GateTimeCell
             if GateTime>0.1:
