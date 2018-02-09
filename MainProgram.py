@@ -73,7 +73,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
         self.filename="TestPoint_Run_16_Jan_2018.xlsm" #Excel filename
-        self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
+        self.wb=load_workbook(self.filename, read_only=False, keep_vba=True, data_only=True) #Open Excel file
         self.ws=self.wb.active #Make it active to work in
         self.wsRS31Data = self.wb.worksheets[1] #Second worksheet titled "RD31 Data"
         print("Spreadsheet setup successfully \n")

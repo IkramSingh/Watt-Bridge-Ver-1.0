@@ -111,8 +111,8 @@ def run():
     Aperforce=Tsampforce-(3e-5)#  FORCED PARAMETER
     Numforce=800.0              #  FORCED PARAMETER
     Aper_targ=0.001            #A/D APERTURE TARGET (SEC)
-    Nharm_min=Nharm_set                   #MINIMUM # HARMONICS SAMPLED BEFORE ALIAS
-    Nbursts=Nbursts_set                 #NUMBER OF BURSTS USED FOR EACH MEASUREMENT
+    Nharm_min=6                   #MINIMUM # HARMONICS SAMPLED BEFORE ALIAS
+    Nbursts=6                 #NUMBER OF BURSTS USED FOR EACH MEASUREMENT
 
 
 

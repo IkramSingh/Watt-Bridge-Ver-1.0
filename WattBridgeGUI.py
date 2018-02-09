@@ -142,8 +142,8 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.ShuntVoltsTest = wx.CheckBox( self, wx.ID_ANY, u"Shunt Volts Test", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer5.Add( self.ShuntVoltsTest, 0, wx.ALL, 5 )
 		
-		self.Channel1Filter = wx.CheckBox( self, wx.ID_ANY, u"Channel  1 Filter", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer5.Add( self.Channel1Filter, 0, wx.ALL, 5 )
+## 		self.Channel1Filter = wx.CheckBox( self, wx.ID_ANY, u"Channel  1 Filter", wx.DefaultPosition, wx.DefaultSize, 0 )
+## 		fgSizer5.Add( self.Channel1Filter, 0, wx.ALL, 5 )
 		
 		
 		fgSizer1.Add( fgSizer5, 1, wx.EXPAND|wx.ALIGN_BOTTOM, 5 )
