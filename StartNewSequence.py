@@ -466,8 +466,8 @@ def loadDialSettings(ws):
     #Close RS232 6 WB
     RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     time.sleep(3)
-    WCount = ws['BP7'].value
-    VCount = ws['BR7'].value
+    WCount = int(ws['BP7'].value)
+    VCount = int(ws['BR7'].value)
     WSign = ws['BQ7'].value
     VSign = ws['BS7'].value
     #Close RS232 6 WB
@@ -488,8 +488,8 @@ def loadDialSettings(ws):
     time.sleep(3)
     RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
     time.sleep(3)
-    WattsDial = WCount/1024
-    VarsDial = VCount/1024
+    WattsDial = float(WCount)/1024
+    VarsDial = float(VCount)/1024
     ws['AC'+str(ActiveRow)] = WattsDial
     ws['AD'+str(ActiveRow)] = WSign
     ws['AE'+str(ActiveRow)] = VarsDial
