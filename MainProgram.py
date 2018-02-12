@@ -9,6 +9,7 @@ import os
 import time
 import SwerleinFreq
 from rd31direct import *
+import xlwings as xw
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     '''Class that contains all of the functions to operate the WattBridge from the GUI.
@@ -73,9 +74,10 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
         self.filename="TestPoint_Run_16_Jan_2018.xlsm" #Excel filename
-        self.wb=load_workbook(self.filename, read_only=False, keep_vba=True, data_only=True) #Open Excel file
-        self.ws=self.wb.active #Make it active to work in
-        self.wsRS31Data = self.wb.worksheets[1] #Second worksheet titled "RD31 Data"
+        self.wb = xw.Book(self.filename)
+        #self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
+        self.ws=self.wb.sheets[0] #Make it active to work in
+        self.wsRS31Data = self.wb.sheets[1] #Second worksheet titled "RD31 Data"
         print("Spreadsheet setup successfully \n")
         self.WattBridgeEventsLog.AppendText("Spreadsheet setup successfully \n")#Inform the user.
     def initialiseCounter(self):
