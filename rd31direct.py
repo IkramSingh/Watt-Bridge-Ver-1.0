@@ -69,7 +69,7 @@ class RD31AutocalError (Exception):
 class RD31 (meterbase.MeterBase):
     
     # Initilisation and clean-up routines
-    def __init__ (self, port="COM9"):
+    def __init__ (self, port="COM10"):
         self.port = serial.Serial (port, 57600)
         self.port.setTimeout (1)
         self.mtype = MeasurementType.FourWireStar
@@ -182,7 +182,7 @@ class RD31 (meterbase.MeterBase):
     def get_current (self, phases = (1, 2, 3)):
         return self._get_metric_list (_RAD_INST_A, phases)
    
-   def get_phase (self, phases = (1, 2, 3)):
+    def get_phase (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_PHASE, _RAD_INST_DPHASE)
         ph = self._get_metric_list (fn, phases)
         # Correct the phase convention
@@ -191,7 +191,7 @@ class RD31 (meterbase.MeterBase):
         except TypeError:
             return -ph
    
-   def get_active_power (self, phases = (1, 2, 3)):
+    def get_active_power (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_W, _RAD_INST_W_DELTA)        
         return self._get_metric_list (fn, phases)
     
@@ -223,7 +223,7 @@ class RD31 (meterbase.MeterBase):
                 phases = 3
         return self._get_metric_list (_RAD_INST_FREQ, phases)
    
-   def get_all_metric (self, phases = (1, 2, 3, 4)):
+    def get_all_metric (self, phases = (1, 2, 3, 4)):
         data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         for fn in range(16):
             data[fn] = self._get_metric_list (fn, phases)
@@ -244,7 +244,7 @@ class RD31 (meterbase.MeterBase):
     def initialise (self):
         pass
    
-   def shutdown (self):
+    def shutdown (self):
         pass
 
 def test ():

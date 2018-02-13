@@ -346,7 +346,7 @@ def powerCH5500(ws):
         #Output to CH5050_V with "O", term.=LF
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
-def setUpFFTVoltsAndPhase():
+def setUpFFTVoltsAndPhase(ws):
     '''Calculates the Fast Fourier Transform (both magnitude and phase vectors) of the data from the 3458A.
     The FFT voltage and phase are obtained from from these vectors.'''
     global SampleData,FFTVolts,FFTPhase
@@ -355,27 +355,29 @@ def setUpFFTVoltsAndPhase():
     for FFTLoop in range(256):
         output = float(HP3458A_V.read()) #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
         SampleData.append(output) #Append to Sample Data from HP3458A_V
+        ws['G'+str(25+FFTLoop)].value = output
         print("FFTLoop: "+ str(output))
 ##     FFTFreqy = 1.0/SampleTime
 ##     t = np.arange(0,1,SampleTime) # time vector
 ##     y = SampleData
 ##     n = len(y) # length of the signal
 ##     k = np.arange(n)
-##     T = n/Fs
+##     T = n/FFTFreqy
 ##     frq = k/T # two sides frequency range
 ##     frq = frq[range(n/2)] # one side frequency range
-##     FFT = np.fft.fft(y)/n # fft computing and normalization
+##     FFT = np.fft.fft(y) # fft computing and normalization
     FFT = np.fft.fft(SampleData) #Calculate FFT with freq=FFT freqy wave=Sample Data
     MagnitudeVector = np.abs(FFT) #Calculate MagnitudeVector with spectrum=FFT
     PhaseVector = np.angle(FFT) #Calculate PhaseVector with spectrum=FFT
-    FFTVolts = MagnitudeVector[9] #Calculate FFT Volts with n=9 V=MagnitudeVector
-    FFTPhase = PhaseVector[9] #Calculate FFT Phase with n=9 V=PhaseVector
+    FFTVolts = MagnitudeVector[9]*2.0/(256.0*np.sqrt(2)) #Calculate FFT Volts with n=9 V=MagnitudeVector
+    FFTPhase = PhaseVector[9]*180.0/(np.pi) #Calculate FFT Phase with n=9 V=PhaseVector
 def setUpFFT():
     '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
     global SampleTime, UncalFreqy
-    UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
     SwerleinFreq.reset()
+    UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
     SampleTime = 9/(256*UncalFreqy)
+    print("SampleTime: "+str(SampleTime))
     HP3458A_V.write("preset fast;mem fifo;mformat sint;oformat ascii") #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
     HP3458A_V.write("ssdc ;range 10;ssrc ext") #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
     HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
@@ -396,9 +398,8 @@ def findDialSettings(wattBridgeGUI,ws):
     UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A. Used to be "Execute Frequency function".
     updateGUI(wattBridgeGUI,ws)
     ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
-    SwerleinFreq.reset()
     setUpFFT() #Execute Set Up FFT function
-    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
+    setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
     if FFTVolts<0.7:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
     ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
@@ -407,7 +408,7 @@ def findDialSettings(wattBridgeGUI,ws):
     #Close RS232 6 WB
     RS232_6_WB.write("DD\r")
     time.sleep(3)
-    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
+    setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
     ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the Det volts value in Excel sheet.
     ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the Det phase value in Excel sheet.
     WCount = ws['BP7'].value
@@ -457,7 +458,7 @@ def refineDialSettings(wattBridgeGUI,ws):
     ws['AF'+str(ActiveRow)].value = VSign
     ws['AM7'].value = "Max"
     time.sleep(0.5) #Delay for 0.5 seconds
-    setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase
+    setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase
     time.sleep(0.5) #Delay for 0.5 seconds
     WattsDial = float(WCount)/1024
     VarsDial = float(VCount)/1024
@@ -695,16 +696,16 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
+            SwerleinFreq.reset()
             ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
             ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)].value=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
             SwerleinFreq.reset()
             UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
-            SwerleinFreq.reset()
             updateGUI(wattBridgeGUI,ws) #Reupdate variables shown in main GUI.
             ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
             setUpFFT() #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
-            setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
+            setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
             ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the FFT ref phase value in Excel sheet.
             #Close RS232 6 WB
@@ -717,7 +718,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             time.sleep(3)
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
-            setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
+            setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the Det volts value in Excel sheet.
             ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the Det phase value in Excel sheet.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Read RD31 \n") #Update event log.
