@@ -606,7 +606,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         WattsOrVarsCell = str(ws['M'+str(ActiveRow)].value)#Obtain watts/vars value from Excel sheet
         if WattsOrVarsCell[0]=="v": #If it is vars
             rd31.port.open()
-            rd31..set_port_pulse_output(int(RDPhase+1),1,0x00) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
+            rd31.set_port_pulse_output(int(RDPhase+1),1,0x00) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
             rd31.port.close() #always close port after performing a command on RD31
             rd31.port.open()
             status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
@@ -616,7 +616,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         elif WattsOrVarsCell[0]=="w": #If it is watts
             print("RDPhase: "+ str(RDPhase))
             rd31.port.open()
-            rd31..set_port_pulse_output(int(RDPhase+1),0,0x00) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
+            rd31.set_port_pulse_output(int(RDPhase+1),0,0x00) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
             rd31.port.close() #always close port after performing a command on RD31
             rd31.port.open()
             status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message

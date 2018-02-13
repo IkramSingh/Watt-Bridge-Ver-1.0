@@ -137,10 +137,13 @@ class RD31 (meterbase.MeterBase):
     # High-level routines
     def set_current_range (self, current):
         pass # We don't have user-settable current ranges.
+        
     def set_voltage_range (self, voltage):
         pass # We don't have user-settable voltage ranges.
+        
     def set_measurement_type (self, mtype):
         self.mtype = mtype
+        
     def set_pulse_output_constant(self, metric, status, pulse_output):
         outdata = pack (">HBI", metric, status, pulse_output)
         self._send_packet(0x32,0,outdata)
@@ -154,6 +157,7 @@ class RD31 (meterbase.MeterBase):
         indata = self.ask (0x2E, 0, outdata)
         (dataA, dataB, dataC, dataNeutral, dataNet) = unpack (">IIIII", indata)
         return (TItofloat (dataA), TItofloat (dataB), TItofloat (dataC), TItofloat (dataNeutral), TItofloat (dataNet))
+    
     def _get_metric_list (self, function, phases):
         values = self._get_metric (function)
         try:
@@ -161,6 +165,7 @@ class RD31 (meterbase.MeterBase):
         except TypeError: # i.e. we were given a scalar for phases
             result = values[phases - 1]
         return result
+    
     def _choose_from_type (self, a, b):
         """The choice of RD-31 function often depends on whether we are doing a delta or star
         measurement (single phase is handled elsewhere). This function is a convenience function
@@ -173,9 +178,11 @@ class RD31 (meterbase.MeterBase):
     def get_voltage (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_V, _RAD_INST_V_DELTA)
         return self._get_metric_list (fn, phases)
+    
     def get_current (self, phases = (1, 2, 3)):
         return self._get_metric_list (_RAD_INST_A, phases)
-    def get_phase (self, phases = (1, 2, 3)):
+   
+   def get_phase (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_PHASE, _RAD_INST_DPHASE)
         ph = self._get_metric_list (fn, phases)
         # Correct the phase convention
@@ -183,19 +190,25 @@ class RD31 (meterbase.MeterBase):
             return [ -x for x in ph ] 
         except TypeError:
             return -ph
-    def get_active_power (self, phases = (1, 2, 3)):
+   
+   def get_active_power (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_W, _RAD_INST_W_DELTA)        
         return self._get_metric_list (fn, phases)
+    
     def get_reactive_power (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_VAR, _RAD_INST_VAR_DELTA)
         return self._get_metric_list (fn, phases)
+    
     def get_total_active_power (self):
         return sum (self.get_active_power ((1, 2, 3)))
+    
     def get_total_reactive_power (self):
         return sum (self.get_reactive_power ((1, 2, 3)))
+    
     def get_apparent_power (self, phases = (1, 2, 3)):
         fn = self._choose_from_type (_RAD_INST_VA, _RAD_INST_VA_DELTA)
         return self._get_metric_list (fn, phases)
+    
     def get_frequency (self, phases = None):
         if phases == None:
             # We assume that the frequency is the same for all channels
@@ -209,11 +222,13 @@ class RD31 (meterbase.MeterBase):
             if self.mtype == MeasurementType.SinglePhase3:
                 phases = 3
         return self._get_metric_list (_RAD_INST_FREQ, phases)
-    def get_all_metric (self, phases = (1, 2, 3, 4)):
+   
+   def get_all_metric (self, phases = (1, 2, 3, 4)):
         data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         for fn in range(16):
             data[fn] = self._get_metric_list (fn, phases)
         return data
+    
     def autocal (self):
         self.ask (0x1b, 0, "\x00")
         self.ask (0x1b, 0, "\x01")
@@ -221,12 +236,15 @@ class RD31 (meterbase.MeterBase):
         sleep (3)
         # We could check for autocal errors in here, but we don't (nor
         # does the Radian software).
+    
     def reset (self):
         """Reboot the RD-31."""
         self.ask (0x03, 0)
+    
     def initialise (self):
         pass
-    def shutdown (self):
+   
+   def shutdown (self):
         pass
 
 def test ():
