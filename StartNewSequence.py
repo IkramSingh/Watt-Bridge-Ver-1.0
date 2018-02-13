@@ -365,16 +365,17 @@ def setUpFFTVoltsAndPhase():
 ##     frq = k/T # two sides frequency range
 ##     frq = frq[range(n/2)] # one side frequency range
 ##     FFT = np.fft.fft(y)/n # fft computing and normalization
-    #FFT = np.fft.fft(SampleData) #Calculate FFT with freq=FFT freqy wave=Sample Data
+    FFT = np.fft.fft(SampleData) #Calculate FFT with freq=FFT freqy wave=Sample Data
     MagnitudeVector = np.abs(FFT) #Calculate MagnitudeVector with spectrum=FFT
     PhaseVector = np.angle(FFT) #Calculate PhaseVector with spectrum=FFT
     FFTVolts = MagnitudeVector[9] #Calculate FFT Volts with n=9 V=MagnitudeVector
     FFTPhase = PhaseVector[9] #Calculate FFT Phase with n=9 V=PhaseVector
 def setUpFFT():
     '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
-    global SampleTime
-    Freqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
-    SampleTime = 9/(256*Freqy)
+    global SampleTime, UncalFreqy
+    UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
+    SwerleinFreq.reset()
+    SampleTime = 9/(256*UncalFreqy)
     HP3458A_V.write("preset fast;mem fifo;mformat sint;oformat ascii") #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
     HP3458A_V.write("ssdc ;range 10;ssrc ext") #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
     HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
@@ -605,7 +606,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         WattsOrVarsCell = str(ws['M'+str(ActiveRow)].value)#Obtain watts/vars value from Excel sheet
         if WattsOrVarsCell[0]=="v": #If it is vars
             rd31.port.open()
-            rd31.set_pulse_output(1, 0, RDPhase) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
+            rd31..set_port_pulse_output(int(RDPhase+1),1,0x00) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
             rd31.port.close() #always close port after performing a command on RD31
             rd31.port.open()
             status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
@@ -615,7 +616,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         elif WattsOrVarsCell[0]=="w": #If it is watts
             print("RDPhase: "+ str(RDPhase))
             rd31.port.open()
-            rd31.set_pulse_output(0, 0, RDPhase) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
+            rd31..set_port_pulse_output(int(RDPhase+1),0,0x00) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
             rd31.port.close() #always close port after performing a command on RD31
             rd31.port.open()
             status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
@@ -698,8 +699,9 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)].value=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
             SwerleinFreq.reset()
             UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
-            ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
             SwerleinFreq.reset()
+            updateGUI(wattBridgeGUI,ws) #Reupdate variables shown in main GUI.
+            ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
             setUpFFT() #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
             setUpFFTVoltsAndPhase() #Execute FFT Volts & Phase function
@@ -808,15 +810,16 @@ def initialiseRadian():
     #Call RD Assign Device with 7,Prog Radian ID. This process is already done in the 'CheckConnections' function
     #in MainProgram.py.
     #Call RD Inst Reset with Prog Radian ID. Below are the commands for this.
-    rd31.port.open()
-    reset_1 = rd31.ask(0x07,0,"\0x02") #Resets Instantaneous Data
-    rd31.port.close()
-    rd31.port.open()
-    reset_2 = rd31.ask(0x07,0,"\0x04") #Resets Instantaneous Min Data
-    rd31.port.close()
-    rd31.port.open()
-    reset_3 = rd31.ask(0x07,0,"\0x08") #Resets Instantaneous Max Data
-    rd31.port.close()
+##     rd31.port.open()
+##     reset_1 = rd31.ask(0x07,0,"\0x02") #Resets Instantaneous Data
+##     rd31.port.close()
+##     rd31.port.open()
+##     reset_2 = rd31.ask(0x07,0,"\0x04") #Resets Instantaneous Min Data
+##     rd31.port.close()
+##     rd31.port.open()
+##     reset_3 = rd31.ask(0x07,0,"\0x08") #Resets Instantaneous Max Data
+##     rd31.port.close()
+    print("Radian Initialised")
 def setPower(ws):
     '''Obtains the DividerRange,Shunt,CTRatio,HEGFreq variables from Excel file as well as outputting 
     various commands to the "RS232 6 WB".'''
