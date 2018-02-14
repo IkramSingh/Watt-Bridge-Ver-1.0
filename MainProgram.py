@@ -73,7 +73,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Creates a link between the software and Excel sheet.'''
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
-        self.filename="TestPoint_Run_16_Jan_2018.xlsm" #Excel filename
+        self.filename="Python_Run_14_Feb_2018.xlsm" #Excel filename
         self.wb = xw.Book(self.filename)
         #self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
         self.ws=self.wb.sheets[0] #Make it active to work in
