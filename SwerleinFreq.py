@@ -17,8 +17,17 @@ def setInstrument(HP3458A_V):
 def get3458A():
     return instrument
 
+def reset():
+    global instrument
+    instrument.timeout = 30000
+    instrument.write('DISP OFF, RESET')
+    instrument.write('RESET')
+    instrument.write('end 2')
+    instrument.write('DISP OFF, READY')
+
 def FNFreq():
     global instrument
+    reset()
     Expect = float(instrument.query('FREQ')) #read frequency of signal
     instrument.write("TARM HOLD;LFILTER ON;LEVEL 0,DC;FSOURCE ACDCV")
     instrument.write("FREQ "+str(Expect*0.9))
@@ -92,15 +101,6 @@ def FNVmeter_bw(Freq,Range):
 ##     plt.ylabel('Voltage [V]')
 ##     plt.xlabel('Time [ms]')
 ##     plt.savefig(str(file_name)+'.pdf')
-    
-
-def reset():
-    global instrument
-    instrument.timeout = 30000
-    instrument.write('DISP OFF, RESET')
-    instrument.write('RESET')
-    instrument.write('end 2')
-    instrument.write('DISP OFF, READY')
     
 def run():
     reset()

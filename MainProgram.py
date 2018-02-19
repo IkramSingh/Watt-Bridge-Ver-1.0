@@ -51,6 +51,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
         self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
+        self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
@@ -73,7 +74,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Creates a link between the software and Excel sheet.'''
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
-        self.filename="Python_Run_14_Feb_2018.xlsm" #Excel filename
+        self.filename="Pb_Auto_V1ai GM_V1q.xlsm" #Excel filename
         self.wb = xw.Book(self.filename)
         #self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
         self.ws=self.wb.sheets[0] #Make it active to work in
@@ -102,6 +103,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
            self.Ag53230A_V.write('DISP:TEXT "Counter Initialised"')
            time.sleep(3) #Delay for 3 seconds
            self.Ag53230A_V.write('DISP:TEXT:CLE')
+
 #mandatory in wx, create an app, False stands for not deteriction stdin/stdout
 #refer manual for details
 app = wx.App(False)

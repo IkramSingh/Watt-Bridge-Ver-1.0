@@ -6,6 +6,8 @@ import numpy as np
 import xlsxwriter
 import SwerleinFreq
 import xlwings as xw
+import wx
+import winsound
 
 completedStartNewSequence=0
 #-----Instruments used in Watt Bridge Software-----#
@@ -59,6 +61,7 @@ input3=[]
 inputTotal=[]
 chanel=0
 VRangeHigh=0
+FFT = []
 #---------------------------------------------------#
 #Temporary variables. To be checked later
 DCVRange=0
@@ -69,78 +72,7 @@ phase = 0
 def getExcelColumn(column):
     columnCharacter = str(xlsxwriter.utility.xl_col_to_name(column-1))
     return columnCharacter
-## def getExcelColumn(column):
-##     '''Returns the character form of the column parameter passed in.'''
-##     if column==35:
-##         return 'AI'
-##     if column==36:
-##         return 'AJ'
-##     if column==37:
-##         return 'AK'
-##     if column==33:
-##         return 'AG'
-##     if column==34:
-##         return 'AH'
-##     if column==42:
-##         return 'AP'
-##     if column==43:
-##         return 'AQ'
-##     if column==44:
-##         return 'AR'
-##     if column==40:
-##         return 'AN'
-##     if column==41:
-##         return 'AO'
-##     if column==38:
-##         return 'AL'
-##     if column==45:
-##         return 'AS'
-##     if column==39:
-##         return 'AM'
-##     if column==46:
-##         return 'AT'
-##     if column==47:
-##         return 'AU'
-##     if column==48:
-##         return 'AV'
-##     if column==49:
-##         return 'AW'
-##     if column==50:
-##         return 'AX'
-##     if column==51:
-##         return 'AY'
-##     if column==52:
-##         return 'AZ'
-##     if column==53:
-##         return 'BA'
-##     if column==54:
-##         return 'BB'
-##     if column==55:
-##         return 'BC'
-##     if column==56:
-##         return 'BD'
-##     if column==57:
-##         return 'BE'
-##     if column==58:
-##         return 'BF'
-##     if column==59:
-##         return 'BG'
-##     if column==60:
-##         return 'BH'
-##     if column==61:
-##         return 'BI'
-##     if column==62:
-##         return 'BJ'
-##     if column==63:
-##         return 'BK'
-##     if column==64:
-##         return 'BL'
-##     if column==65:
-##         return 'BM'
-##     if column==66:
-##         return 'BN'
-##     if column==67:
-##         return 'BO'
+
 def setupChanel(wattBridgeGUI):
     '''Sends various commands to the FLUKE power supply.'''
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+":FITT?") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
@@ -150,6 +82,7 @@ def setupChanel(wattBridgeGUI):
     PhaseOn = FLUKE_V.read()
     if PhaseOn==0:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: One of the phases you have tried turn on is not fitted \n") #Update event log.
+        return
         time.sleep(1)
     if SourceType == "FLUHIGH":
         FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:FITT?") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
@@ -158,6 +91,7 @@ def setupChanel(wattBridgeGUI):
         AmpFitted = FLUKE_V.read()
         if AmpFitted==0:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: A 52120A unit is not fitted to the phase you have selected \n") #Update event log.
+            return
         if wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==0:
             FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:TERM:MODE AUTO") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
             print("AUTO")
@@ -168,6 +102,7 @@ def setupChanel(wattBridgeGUI):
     else:
         if SetAmpsCell>21:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: You have selected a current value above 21A, please use the FLUHIGH source in Excel and retry \n") #Update event log.
+            return
         FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:RANG " +str(IRangeLow)+ "," +str(IRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
     FLUKE_V.write("UNIT:MHAR:CURR ABS") #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
     FLUKE_V.write("UNIT:MHAR:VOLT ABS") #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
@@ -177,9 +112,10 @@ def setupChanel(wattBridgeGUI):
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCCurrentOffset)+ "," +str(0)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:MHAR:HARM0 " , DC Current Offset , "," , 0, term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:STAT ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:STAT ON", term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:HARM1 " +str(SetVoltsCell)+ "," +str(SetVoltsPhase)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM1 " , Set volts cell , "," , Set Volts Phase, term.=LF
-    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:MHAR:HARM0 " +str(DCVoltageOffset)+ "," +str(0))#Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM0 " , DC Voltage Offset , "," , 0, term.=LF
+    FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:MHAR:HARM0 " +str(DCVoltageOffset)+ "," +str(0))#Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:MHAR:HARM0 " , DC Voltage Offset , "," , 0, term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":VOLT:STAT " + "ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":VOLT:STAT " , "ON", term.=LF
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:STAT " + "ON") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:STAT " , "ON", term.=LF
+
 def setPhases():
     '''Sets the phase value.'''
     global SetPhaseCell
@@ -200,6 +136,7 @@ def powerFluke(wattBridgeGUI,ws):
     FLUKE_V.write("OUTP:SENS 0") #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
     if wattBridgeGUI.Flukeramp.GetValue()<2:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
+        return
     FLUKE_V.write("OUTP:RAMP:TIME "+str(wattBridgeGUI.Flukeramp.GetValue())) #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
@@ -208,32 +145,35 @@ def powerFluke(wattBridgeGUI,ws):
     SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
     if SetVoltsCell>1008:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage value out of range \n") #Update event log.
+        return
     if SetVoltsCell>250:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage selected is above 250V \n") #Update event log.
+        return
     if SetAmpsCell>120:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Current value out of range \n") #Update event log.
+        return
     #Specific cases for SetVoltsCell
     if 0 <= SetVoltsCell <= 22.9:
         VRangeHigh=23
-        DCVoltageOffset=-0.00081
+        DCVoltageOffset=-0.00094
     elif 22.9 <= SetVoltsCell <= 44.9:
-        VRangeHigh=90
-        DCVoltageOffset=0.00142
-    elif 44.9 <= SetVoltsCell <= 89.9:
         VRangeHigh=45
-        DCVoltageOffset=-0.00637
+        DCVoltageOffset=-0.0018
+    elif 44.9 <= SetVoltsCell <= 89.9:
+        VRangeHigh=90
+        DCVoltageOffset=-0.00673
     elif 89.9 <= SetVoltsCell <= 179.9:
         VRangeHigh=180
-        DCVoltageOffset=-0.0121
+        DCVoltageOffset=-0.01299
     elif 179.9 <= SetVoltsCell <= 359.9:
         VRangeHigh=360
-        DCVoltageOffset=-0.01784
+        DCVoltageOffset=-0.02054
     elif 359.9 <= SetVoltsCell <= 649.9:
         VRangeHigh=650
-        DCVoltageOffset=-0.02082
+        DCVoltageOffset=-0.02558
     elif 649.9 <= SetVoltsCell <= 1008:
         VRangeHigh=1008
-        DCVoltageOffset=-0.01602
+        DCVoltageOffset=-0.0264
     if SourceType=="FLUHIGH":
         if 0 <= SetAmpsCell <= 1.999:
             HighCurrentRange=2
@@ -248,31 +188,31 @@ def powerFluke(wattBridgeGUI,ws):
         if 0 <= SetAmpsCell <= 0.249:
             IRangeLow=0.05
             IRangeHigh=0.25
-            DCCurrentOffset=1.785E-05
+            DCCurrentOffset=1.3e-05
         elif 0.249 <= SetAmpsCell <= 0.499:
-            IRangeLow=0.1
-            IRangeHigh=0.5
-            DCCurrentOffset=4.186E-05
-        elif 0.499 <= SetAmpsCell <= 0.999:
             IRangeLow=0.05
+            IRangeHigh=0.5
+            DCCurrentOffset=3.6e-05
+        elif 0.499 <= SetAmpsCell <= 0.999:
+            IRangeLow=0.1
             IRangeHigh=1
-            DCCurrentOffset=8.285E-05
+            DCCurrentOffset=6.8e-05
         elif 0.999 <= SetAmpsCell <= 1.999:
             IRangeLow=0.2
             IRangeHigh=2
-            DCCurrentOffset=0.0001459
+            DCCurrentOffset=0.000133
         elif 1.999 <= SetAmpsCell <= 4.99:
             IRangeLow=0.5
             IRangeHigh=5
-            DCCurrentOffset=0.00042
+            DCCurrentOffset=0.000345
         elif 4.99 <= SetAmpsCell <= 9.99:
             IRangeLow=1
             IRangeHigh=10
-            DCCurrentOffset=0.0009386
+            DCCurrentOffset=0.000786
         elif 9.99 <= SetAmpsCell <= 21:
             IRangeLow=2
             IRangeHigh=21
-            DCCurrentOffset=0.002118
+            DCCurrentOffset=0.001675
     if wattBridgeGUI.SourceCh1.GetValue()==True:
         Chanel = 1
         SetPhaseCell=SetPhaseCell
@@ -302,6 +242,7 @@ def powerFluke(wattBridgeGUI,ws):
         if FlukeErrorNumber!=0: #If/Then Fluke error with x=Fluke Error number
             VectorIndex = flukeError[1]#Calculate Vector Index with v=Fluke Error i=1
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: " + str(VectorIndex)+ "\n") #Update event log. #Cause error General Error code=20010, text=Vector Index
+            return
     FLUKE_V.write("OUTP:STAT ON")#Output to FLUKE_V with "OUTP:STAT ON", term.=LF
     time.sleep(float(wattBridgeGUI.Flukeramp.GetValue())) #Delay for Fluke Ramp (s) seconds
     FLUKE_V.write("OUTP")#Output to FLUKE_V with "OUTP:STAT?", term.=LF
@@ -310,7 +251,9 @@ def powerFluke(wattBridgeGUI,ws):
     time.sleep(0.5) #Delay for 0.5 seconds
     if isFlukeOff < 0.5: #If/Then Fluke not On with x=Is Fluke Off
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Power output unsuccessful. Check connections. \n") #Update event log. 
-    time.sleep(30) #Delay for 30 seconds
+        return
+    time.sleep(12) #Delay for 12 seconds
+
 def powerCH5500(ws):
     global CHType
     CHType = ws['B7'].value #Obtain CHType
@@ -346,40 +289,35 @@ def powerCH5500(ws):
         #Output to CH5050_V with "O", term.=LF
         print('CHType<99')
     time.sleep(60) #Delay for 60 seconds
+
 def setUpFFTVoltsAndPhase(ws):
     '''Calculates the Fast Fourier Transform (both magnitude and phase vectors) of the data from the 3458A.
     The FFT voltage and phase are obtained from from these vectors.'''
-    global SampleData,FFTVolts,FFTPhase
+    global SampleData,FFTVolts,FFTPhase,FFT
+    sweepCheck = HP3458A_V.query('SWEEP?')
+    print("SweepCheck: "+str(sweepCheck))
     SampleData=[] #Clear sample data
     time.sleep(2) #Delay for 2 seconds
     for FFTLoop in range(256):
         output = float(HP3458A_V.read()) #Enter from HP3458A_V up to 256 bytes, stop on EOS=LF
         SampleData.append(output) #Append to Sample Data from HP3458A_V
-        print("FFTLoop: "+ str(output))
-##     FFTFreqy = 1.0/SampleTime
-##     t = np.arange(0,1,SampleTime) # time vector
-##     y = SampleData
-##     n = len(y) # length of the signal
-##     k = np.arange(n)
-##     T = n/FFTFreqy
-##     frq = k/T # two sides frequency range
-##     frq = frq[range(n/2)] # one side frequency range
-##     FFT = np.fft.fft(y) # fft computing and normalization
     FFT = np.fft.fft(SampleData) #Calculate FFT with freq=FFT freqy wave=Sample Data
     MagnitudeVector = np.abs(FFT) #Calculate MagnitudeVector with spectrum=FFT
     PhaseVector = np.angle(FFT) #Calculate PhaseVector with spectrum=FFT
     FFTVolts = MagnitudeVector[9]*2.0/(256.0*np.sqrt(2)) #Calculate FFT Volts with n=9 V=MagnitudeVector
     FFTPhase = PhaseVector[9]*180.0/(np.pi) #Calculate FFT Phase with n=9 V=PhaseVector
+    
 def setUpFFT():
     '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
     global SampleTime, UncalFreqy
-    SwerleinFreq.reset()
+    time.sleep(2) #For settling purposes
     UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
     SampleTime = 9/(256*UncalFreqy)
     print("SampleTime: "+str(SampleTime))
     HP3458A_V.write("preset fast;mem fifo;mformat sint;oformat ascii") #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
     HP3458A_V.write("ssdc ;range 10;ssrc ext") #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
     HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
+
 def findDialSettings(wattBridgeGUI,ws):
     '''Obtains the Dial setting from the Excel sheet and executes the setUpFFT 
     and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
@@ -393,7 +331,6 @@ def findDialSettings(wattBridgeGUI,ws):
     ws['H'+str(ActiveRow)].value = CTRatio
     ws['I'+str(ActiveRow)].value = HEGFreq
     ws['AM7'].value = "Min"
-    SwerleinFreq.reset()
     UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A. Used to be "Execute Frequency function".
     updateGUI(wattBridgeGUI,ws)
     ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
@@ -401,15 +338,18 @@ def findDialSettings(wattBridgeGUI,ws):
     setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
     if FFTVolts<0.7:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
+        return
     ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
     ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the FFT ref phase value in Excel sheet.
     #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
     #Close RS232 6 WB
     RS232_6_WB.write("DD\r")
-    time.sleep(3)
+    time.sleep(1)
     setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
     ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the Det volts value in Excel sheet.
     ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the Det phase value in Excel sheet.
+    print("Initial FFTVolts: " + str(FFTVolts))
+    print("Initial FFTPhase: " + str(FFTPhase))
     TrialAmps = ws[getExcelColumn(64)+'7'].value
     lineCurrent = TrialAmps
     TrialVolts = ws[getExcelColumn(65)+'7'].value
@@ -420,16 +360,17 @@ def findDialSettings(wattBridgeGUI,ws):
     VCount = ws['BR7'].value
     WSign = ws['BQ7'].value
     VSign = ws['BS7'].value
+    print WCount,VCount,WSign,VSign,lineCurrent,lineVolts,phase
     updateGUI(wattBridgeGUI,ws)
     #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
     #Close RS232 6 WB
     RS232_6_WB.write("DV\r")
-    time.sleep(3)
+    time.sleep(1)
 
 def refineDialSettings(wattBridgeGUI,ws):
     '''Obtains the Dial settings from the Excel sheet and refines them and executes the setUpFFT 
     and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
-    global WCount, VCount, WSign, VSign
+    global WCount, VCount, WSign, VSign, lineCurrent, lineVolts, phase
     time.sleep(0.5) #Delay for 0.5 seconds
     WCount = ws['BP7'].value
     VCount = ws['BR7'].value
@@ -442,20 +383,20 @@ def refineDialSettings(wattBridgeGUI,ws):
     #Close RS232 6 WB
     #Close RS232 6 WB
     #Close RS232 6 WB
-    RS232_6_WB.write("DD\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-    time.sleep(3)
+    RS232_6_WB.write("DD\r") #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
+    time.sleep(1)
     RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write(str(WSign)+"\r") #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write(str(VSign)+"\r") #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     WattsDial = float(WCount)/1024
     VarsDial = float(VCount)/1024
     ws['AC'+str(ActiveRow)].value = WattsDial
@@ -463,19 +404,14 @@ def refineDialSettings(wattBridgeGUI,ws):
     ws['AE'+str(ActiveRow)].value = VarsDial
     ws['AF'+str(ActiveRow)].value = VSign
     ws['AM7'].value = "Max"
-    time.sleep(0.5) #Delay for 0.5 seconds
+    time.sleep(3) #Delay for 0.5 seconds
     setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase
-    time.sleep(0.5) #Delay for 0.5 seconds
     WattsDial = float(WCount)/1024
     VarsDial = float(VCount)/1024
-    WCount = ws['BP7'].value
-    VCount = ws['BR7'].value
-    #Close RS232 6 WB
-    #Close RS232 6 WB
     RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount), term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     ws['AC'+str(ActiveRow)].value = WattsDial
     ws['AD'+str(ActiveRow)].value = WSign
     ws['AE'+str(ActiveRow)].value = VarsDial
@@ -492,12 +428,14 @@ def refineDialSettings(wattBridgeGUI,ws):
     VCount = ws['BR7'].value
     WSign = ws['BQ7'].value
     VSign = ws['BS7'].value
+    print WCount,VCount,WSign,VSign,lineCurrent,lineVolts,phase 
     updateGUI(wattBridgeGUI,ws)
+
 def loadDialSettings(ws):
     '''Loads all of the Dial settings from the Excel sheet.'''
     #Close RS232 6 WB
     RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     WCount = ws['BP7'].value
     VCount = ws['BR7'].value
     WSign = ws['BQ7'].value
@@ -509,17 +447,20 @@ def loadDialSettings(ws):
     #Close RS232 6 WB
     #Close RS232 6 WB
     RS232_6_WB.write("W"+str(WCount)+"\r") #Output to RS232 6 WB with "W" , WCount, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("V"+str(VCount)+"\r") #Output to RS232 6 WB with "V" , VCount, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write(str(WSign)+"\r") #Output to RS232 6 WB with WSign, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write(str(VSign)+"\r") #Output to RS232 6 WB with VSign, term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
-    time.sleep(3)
+    frequency = 1000  # Set Frequency To 2500 Hertz
+    duration = 1000  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
+    time.sleep(15)
     WattsDial = float(WCount)/1024
     VarsDial = float(VCount)/1024
     ws['AC'+str(ActiveRow)].value = WattsDial
@@ -539,10 +480,10 @@ def readRadian2(ReadingsLoop,wsRS31Data):
         rd31.port.open()
         data = rd31._get_metric(ReadRadLoop) #Call RD Get All Instant Data with Prog Radian ID,ReadRad loop,Rad Ph A,Rad Ph B,Rad Ph C,Rad Ph Neutral,Rad Ph Net
         rd31.port.close()
-        rd31.port.open()
-        status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-        print("Status: "+str(status))
-        rd31.port.close()
+        #rd31.port.open()
+        #status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+        #print("Status: "+str(status))
+        #rd31.port.close()
         input1.append(data[0]) #Append to Input 1 from Rad Ph A
         input2.append(data[1]) #Append to Input 2 from Rad Ph B
         input3.append(data[2]) #Append to Input 3 from Rad Ph C
@@ -561,6 +502,7 @@ def readRadian2(ReadingsLoop,wsRS31Data):
         #Calculate Total Cell with row=Active Row offset=col offset loop=write Rad to exel
         RadData2Write = inputTotal[WriteRadToExcel] #Calculate Rad data 2 write with vector=Input Total loop=write Rad to exel
         wsRS31Data[getExcelColumn(colOffset+WriteRadToExcel+21)+str(ActiveRow)].value = RadData2Write #Set remote Excel link RD31 Data item Total Cell to Rad data 2 write
+
 def pasteResults(ws):
     '''Obtains all of the calculated values such as MeanVolts etc from
     the Excel sheet and then places them within the ActiveRow lines
@@ -631,20 +573,20 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             rd31.port.open()
             rd31.set_port_pulse_output(int(RDPhase+1),1,0x00) #Call Set Radian output pulse with Prog Radian ID,1,1,RD phase
             rd31.port.close() #always close port after performing a command on RD31
-            rd31.port.open()
-            status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-            print("Status: "+str(status))
-            rd31.port.close() #always close port after performing a command on RD31
+            #rd31.port.open()
+            #status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            #print("Status: "+str(status))
+            #rd31.port.close() #always close port after performing a command on RD31
             print("WattsOrVars: vars")
         elif WattsOrVarsCell[0]=="w": #If it is watts
             print("RDPhase: "+ str(RDPhase))
             rd31.port.open()
             rd31.set_port_pulse_output(int(RDPhase+1),0,0x00) #Set Radian output pulse with Prog Radian ID,1,0,RD phase
             rd31.port.close() #always close port after performing a command on RD31
-            rd31.port.open()
-            status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-            print("Status: "+str(status))
-            rd31.port.close() #always close port after performing a command on RD31
+            #rd31.port.open()
+            #status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+            #print("Status: "+str(status))
+            #rd31.port.close() #always close port after performing a command on RD31
             print("WattsOrVars: watt")
         if wattBridgeGUI.ShuntVoltsTest.GetValue()==True: #If user has checked Shunt Volts Test
             #Output to HP3488A_V with "CRESET 4", term.=LF
@@ -696,13 +638,13 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ActiveRow=RowNumber
             time.sleep(0.5) #Delay for 0.5 seconds
             RS232_6_WB.write('DV\r') #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             #Close RS232 6 WB
             RS232_6_WB.write('A01\r') #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             #Close RS232 6 WB
             RS232_6_WB.write('B01\r') #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             #Close RS232 6 WB
             time.sleep(0.5) #Delay for 0.5 seconds
             Ch1GateTimeCell = ws['J'+str(ActiveRow)].value #Get Ch1 gate time cell value from Excel file.
@@ -718,10 +660,8 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
-            SwerleinFreq.reset()
             ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
             ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)].value=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
-            SwerleinFreq.reset()
             UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
             updateGUI(wattBridgeGUI,ws) #Reupdate variables shown in main GUI.
             ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
@@ -734,11 +674,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             #Close RS232 6 WB
             #Close RS232 6 WB
             RS232_6_WB.write("DD\r") #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
-            time.sleep(3)
+            time.sleep(1)
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
             print("Detector in session!!!!!")
             setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
@@ -782,19 +722,19 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                         rd31.port.open()
                         inst_metric = rd31._get_metric(4) #Call RD Get Instantaneous Data with Prog Radian ID,0,4,RD31 Total
                         rd31.port.close()
-                        rd31.port.open()
-                        status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
-                        print("Status: "+str(status))
-                        rd31.port.close()
+                        #rd31.port.open()
+                        #status = rd31.ask(0x20,0,"") #Call RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        #print("Status: "+str(status))
+                        #rd31.port.close()
                         print("WattsOrVars: vars")
                     elif WattsOrVarsCell[0]=="w": #If it is watts
                         rd31.port.open()
                         inst_metric = rd31._get_metric(2) #RD Get Instantaneous Data with Prog Radian ID,0,2,RD31 Total
                         rd31.port.close()
-                        rd31.port.open()
-                        status = rd31.ask(0x20,0,"") #RD Get Error Message with Prog Radian ID,RD 31 Error Message
-                        print("Status: "+str(status))
-                        rd31.port.close()
+                        #rd31.port.open()
+                        #status = rd31.ask(0x20,0,"") #RD Get Error Message with Prog Radian ID,RD 31 Error Message
+                        #print("Status: "+str(status))
+                        #rd31.port.close()
                         print("WattsOrVars: watt")
                     RD31Total=inst_metric[4]
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)].value=RD31Total
@@ -815,22 +755,31 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         #Close RS232 6 WB
         #Close RS232 6 WB
         RS232_6_WB.write("DV\r") #Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-        time.sleep(3)
+        time.sleep(1)
         RS232_6_WB.write("A01\r") #Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
-        time.sleep(3)
+        time.sleep(1)
         RS232_6_WB.write("B01\r") #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
-        time.sleep(3)
+        time.sleep(1)
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Calculating Results \n")
         updateGUI(wattBridgeGUI,ws)
         time.sleep(2) #Delay for 2 second
         pasteResults(ws) #Execute Paste Results function
         time.sleep(2) #Delay for 2 second
+        ws['S'+str(ActiveRow)].value = ws['BY'+str(ActiveRow)].value #Voltage
+        ws['T'+str(ActiveRow)].value = ws['BZ'+str(ActiveRow)].value #Current
+        ws['U'+str(ActiveRow)].value = ws['CA'+str(ActiveRow)].value #Non-IEC Phase Difference
+        ws['V'+str(ActiveRow)].value = ws['CL'+str(ActiveRow)].value #Power/var factor
+        ws['W'+str(ActiveRow)].value = ws['CG'+str(ActiveRow)].value #Error %
+        ws['X'+str(ActiveRow)].value = ws['CK'+str(ActiveRow)].value #Relative Expanded Uncertainty
+        ws['Y'+str(ActiveRow)].value = ws['CJ'+str(ActiveRow)].value #Coverage Factor
+        ws['Z'+str(ActiveRow)].value = ws['CO'+str(ActiveRow)].value #Impulses/w or var hr
+        winsound.Beep(1000,1000)
         RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
         ActiveRow = RowNumber
         if ws['A'+str(ActiveRow)].value==0: #Once reached end of Excel sheet.
             Finished=1
-    wattBridgeGUI.WattBridgeEventsLog.AppendText("Completed collecting/measuring Data sequence \n") #Update event log.
-    wattBridgeGUI.WattBridgeEventsLog.AppendText("Press 'Save Data' button to save back into original Excel file \n") #Update event log.
+    updateGUI(wattBridgeGUI,ws)
+    wattBridgeGUI.WattBridgeEventsLog.AppendText("---Completed collecting/measuring Data sequence--- \n") #Update event log.
 def initialiseRadian():
     '''Resets the Instantaneous Data, Min Data and Max Data in the RD31.'''
     #Call RD Assign Device with 7,Prog Radian ID. This process is already done in the 'CheckConnections' function
@@ -855,7 +804,7 @@ def setPower(ws):
     CTRatio = ws['H'+str(ActiveRow)].value #Get the CT ratio cell from Excel sheet
     HEGFreq = ws['I'+str(ActiveRow)].value #Get the Set frequency cell from Excel sheet
     RS232_6_WB.write("DV\r")
-    time.sleep(3)
+    time.sleep(1)
     # Open RS232 6 WB
     # Set mode of RS232 6 WB baud rate=9600, parity="N", bits=8, stop bits=1
     # Close RS232 6 WB
@@ -866,30 +815,30 @@ def setPower(ws):
     # Close RS232 6 WB
     # Close RS232 6 WB
     RS232_6_WB.write("DV\r") # Output to RS232 6 WB with "DV", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("W0000\r") # Output to RS232 6 WB with "W0000", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("V0000\r") # Output to RS232 6 WB with "V0000", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("A01\r") # Output to RS232 6 WB with "A01", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("B01\r") # Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     if DividerRange==60:
         RS232_6_WB.write("R060\r") #Output to RS232 6 WB with "R" , "060", term.=CR, wait for completion?=1
-        time.sleep(3)
+        time.sleep(1)
         print("DividerRange is 60")
     else:
         RS232_6_WB.write("R"+str(DividerRange)+"\r") #Output to RS232 6 WB with "R" , Divider Range, term.=CR, wait for completion?=1
-        time.sleep(3)
+        time.sleep(1)
         print("DividerRange is not 60")
     # Close RS232 6 WB
     # Close RS232 6 WB
     # Close RS232 6 WB
     RS232_6_WB.write("WP-\r") # Output to RS232 6 WB with "WP-", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     RS232_6_WB.write("VP-\r") # Output to RS232 6 WB with "VP-", term.=CR, wait for completion?=1
-    time.sleep(3)
+    time.sleep(1)
     time.sleep(0.5) #Delay for 0.5 seconds
 def updateGUI(wattBridgeGUI,ws):
     '''Updates the values shown in the main GUI. This is executed
@@ -901,20 +850,18 @@ def updateGUI(wattBridgeGUI,ws):
     wattBridgeGUI.WCount1.SetValue(str(WCount)) #Display the W count value
     wattBridgeGUI.VCount.SetValue(str(VCount)) #Display the V Count value
     wattBridgeGUI.ActualFrequency.SetValue(str(UncalFreqy)) #Display the Frequency value
-    time.sleep(3) #To allow system to display variable values.
     print("GUI updated")
 def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
     functions are executing simultaneously for the Suser.'''
     global lineCurrent, lineVolts, phase
-    lineCurrent = ws['BL7'].value
-    lineVolts = ws['BM7'].value
-    phase = ws['BN7'].value
+    lineCurrent = "Calculating"
+    lineVolts = "Calculating"
+    phase = "Calculating"
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     updateGUI(wattBridgeGUI,ws)
-    time.sleep(3)
     continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data)
 ##     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,ws,))
 ##     t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
