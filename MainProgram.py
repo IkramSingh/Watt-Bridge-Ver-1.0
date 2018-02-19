@@ -10,6 +10,8 @@ import time
 import SwerleinFreq
 from rd31direct import *
 import xlwings as xw
+import pyttsx
+import winsound
 
 class WattBridge(WattBridgeGUI.WattBridgeSoftware):
     '''Class that contains all of the functions to operate the WattBridge from the GUI.
@@ -39,34 +41,35 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.HP3478A_V = Setup.setup3478() #Get HP3478A Visa Object
         self.HP3478A_V.write('D23478A DONE.') #Display message on 3478A
         self.WattBridgeEventsLog.AppendText("\nGo and check 3478A for message '3478A DONE' being displayed. System will pause for 12 seconds...\n")
-        time.sleep(2)
+        StartNewSequence.updateGUI(frame,self.ws)
+        time.sleep(12)
         self.HP3478A_V.write('D1') #Remove display to default
         self.RS232_6_WB = Setup.setupWB() #Get Watt Bridge Visa object
         self.RS232_6_WB.write("W0721\r")
         time.sleep(3)
         self.RS232_6_WB.write("V0127\r")
         time.sleep(3)
-        self.WattBridgeEventsLog.AppendText("Check and see if Watt Bridge has been set to W0721 & V0127. System will pause for 12 seconds...\n")
+        self.WattBridgeEventsLog.AppendText("Check and see if Watt Bridge has been set to W0721 & V0127. \n")
         time.sleep(2)
         StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
         self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
-        self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
+        winsound.Beep(40,750)
+        engine = pyttsx.init()
+        engine.setProperty('rate',121)
+        engine.say('Completed Instrument Setup.')
+        engine.runAndWait()
+
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
+    def ContinueSequenceOnButtonClick( self, event ):
+        '''Recommences measuring from the current row.'''
+        currentRow = frame.CurrentRow.GetValue()
+        StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data)
     def AboutOnMenuSelection( self, event ):
         '''Displays information about the software to the user in a seperate window.'''
         WattBridgeGUI.About(None).Show(True) #Displays information about the software.
-    def saveSpreadsheet(self):
-        '''Saves the Excel file that was initially setup in the setupSpreadsheet function.'''
-        self.WattBridgeEventsLog.AppendText("Saving Spreadsheet...\n") #Inform the user.
-        self.wb.template=False #Make sure Excel file is saved as document not template
-        self.wb.save(self.filename) #Save file with same name
-        self.WattBridgeEventsLog.AppendText("Spreadsheet saved successfully\n") #Inform the user.
-    def SaveDataOnButtonClick( self, event ):
-        '''Accesses the saveSpreadsheet function when user presses "Save Data" button in the main GUI'''
-        self.saveSpreadsheet()
     def StartNewSequenceOnButtonClick( self, event ):
         '''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''
         StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data) #Start of startNewSequence in StartNewSequence.py
@@ -113,6 +116,10 @@ app = wx.App(False)
 frame = WattBridge(None)
 #show the frame
 frame.Show(True) 
-
+winsound.Beep(40,750)
+engine = pyttsx.init()
+engine.setProperty('rate',121)
+engine.say(' Watt Bridge Version 1.0')
+engine.runAndWait()
 #start the applications
 app.MainLoop()

@@ -237,8 +237,8 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.ContinueSequence = wx.Button( self, wx.ID_ANY, u"Continue Sequence (from \"Current Row\")", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer7.Add( self.ContinueSequence, 0, wx.ALL, 5 )
 		
-		self.SaveData = wx.Button( self, wx.ID_ANY, u"Save Data", wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer7.Add( self.SaveData, 0, wx.ALL, 5 )
+		#self.SaveData = wx.Button( self, wx.ID_ANY, u"Save Data", wx.DefaultPosition, wx.DefaultSize, 0 )
+		#fgSizer7.Add( self.SaveData, 0, wx.ALL, 5 )
 		
 		self.MakeSafe = wx.Button( self, wx.ID_ANY, u"Make Safe", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer7.Add( self.MakeSafe, 0, wx.ALL, 5 )
@@ -282,7 +282,7 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.Bind( wx.EVT_CLOSE, self.WattBridgeSoftwareOnClose )
 		self.StartNewSequence.Bind( wx.EVT_BUTTON, self.StartNewSequenceOnButtonClick )
 		self.ContinueSequence.Bind( wx.EVT_BUTTON, self.ContinueSequenceOnButtonClick )
-		self.SaveData.Bind( wx.EVT_BUTTON, self.SaveDataOnButtonClick )
+		#self.SaveData.Bind( wx.EVT_BUTTON, self.SaveDataOnButtonClick )
 		self.MakeSafe.Bind( wx.EVT_BUTTON, self.MakeSafeOnButtonClick )
 		self.CheckConnectionsSetup.Bind( wx.EVT_BUTTON, self.CheckConnectionsOnButtonClick )
 		self.Bind( wx.EVT_MENU, self.AboutOnMenuSelection, id = self.About.GetId() )

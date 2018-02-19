@@ -8,6 +8,7 @@ import SwerleinFreq
 import xlwings as xw
 import wx
 import winsound
+import pyttsx
 
 completedStartNewSequence=0
 #-----Instruments used in Watt Bridge Software-----#
@@ -457,10 +458,7 @@ def loadDialSettings(ws):
     RS232_6_WB.write("A33\r") #Output to RS232 6 WB with "A33"(3), term.=CR, wait for completion?=1
     time.sleep(1)
     RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33"(3), term.=CR, wait for completion?=1
-    frequency = 1000  # Set Frequency To 2500 Hertz
-    duration = 1000  # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
-    time.sleep(15)
+    time.sleep(1)
     WattsDial = float(WCount)/1024
     VarsDial = float(VCount)/1024
     ws['AC'+str(ActiveRow)].value = WattsDial
@@ -507,9 +505,6 @@ def pasteResults(ws):
     '''Obtains all of the calculated values such as MeanVolts etc from
     the Excel sheet and then places them within the ActiveRow lines
     below.'''
-    '''Obtains all of the calculated values such as MeanVolts etc from
-    the Excel sheet and then places them within the ActiveRow lines
-    below.'''
     global ActiveRow
     ActiveRow=7
     CalculationResult = [] #Clear Calculation Results
@@ -546,6 +541,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     global NumberOfReadings,Finished,ReadingNumber,ACVoltsRms,UncalFreqy,FFTVolts,FFTPhase,RDPhase
     RowNumber=int(rowNumber)
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
+    winsound.Beep(40,750)
+    engine = pyttsx.init()
+    engine.setProperty('rate',121)
+    engine.say('Initiating Radian')
+    engine.runAndWait()
     initialiseRadian() #Run Initialise Radian function. Must add later
     time.sleep(1) #Delay for 1 second
     Finished = 0 #End of process?
@@ -562,6 +562,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
         ReadingNumber=1
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
+        winsound.Beep(40,750)
+        engine = pyttsx.init()
+        engine.setProperty('rate',121)
+        engine.say('Applying power')
+        engine.runAndWait()
         ActiveRow=RowNumber
         Phase123Cell = ws['P'+str(ActiveRow)].value #Obtain phase value from Excel sheet
         if Phase123Cell==123 or Phase123Cell==0:
@@ -593,7 +598,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             time.sleep(1)
             #Output to HP3488A_V with "CLOSE 404", term.=LF
             time.sleep(1)
-            eventsLog.AppendText("Shunt Volts Test on \n")
+            #eventsLog.AppendText("Shunt Volts Test on \n")
         dateTime = str(time.asctime())
         ws['AA'+str(ActiveRow)].value=dateTime #Set the time and date in Excel sheet.
         ws['AP3'].value=RowNumber #Set the Row Number in Excel sheet.
@@ -617,6 +622,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             print("SourceType selected in Excel file doesnt exist.")
         ActiveRow=7 #Set ActiveRow to 7.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
+        winsound.Beep(40,750)
+        engine = pyttsx.init()
+        engine.setProperty('rate',121)
+        engine.say('Finding Dial Settings')
+        engine.runAndWait()
         findDialSettings(wattBridgeGUI,ws) #Execute Find Dial Settings
         refineDialSettings(wattBridgeGUI,ws) #Execute Refine Dial Settings
         ActiveRow=RowNumber
@@ -660,6 +670,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
+            winsound.Beep(40,750)
+            engine = pyttsx.init()
+            engine.setProperty('rate',121)
+            engine.say('Collecting swerlein measurements')
+            engine.runAndWait()
             ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
             ws[getExcelColumn(35+7*(ReadingNumber-1))+str(ActiveRow)].value=ACVoltsRms #Set the Ac volts rms value in Excel sheet.
             UncalFreqy = SwerleinFreq.FNFreq() #Obtain the Frequency from 3458A
@@ -667,6 +682,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
             setUpFFT() #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
+            winsound.Beep(40,750)
+            engine = pyttsx.init()
+            engine.setProperty('rate',121)
+            engine.say('Reference phase')
+            engine.runAndWait()
             setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
             ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the FFT ref phase value in Excel sheet.
@@ -680,6 +700,11 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             time.sleep(1)
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
+            winsound.Beep(40,750)
+            engine = pyttsx.init()
+            engine.setProperty('rate',121)
+            engine.say('Detector volts and phase')
+            engine.runAndWait()
             print("Detector in session!!!!!")
             setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the Det volts value in Excel sheet.
@@ -738,6 +763,13 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                         print("WattsOrVars: watt")
                     RD31Total=inst_metric[4]
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)].value=RD31Total
+            winsound.Beep(40,750)
+            engine = pyttsx.init()
+            engine.setProperty('rate',121)
+            engine.say('Completed Reading '+str(ReadingNumber))
+            time.sleep(0.2)
+            engine.say('in row '+str(ActiveRow))
+            engine.runAndWait()
         #Execute Read Radian all Data !!!Not needed function!!!
         if SourceType=="CH":
             CHType = ws['B7'].value #Obtain CHType
@@ -773,12 +805,21 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         ws['X'+str(ActiveRow)].value = ws['CK'+str(ActiveRow)].value #Relative Expanded Uncertainty
         ws['Y'+str(ActiveRow)].value = ws['CJ'+str(ActiveRow)].value #Coverage Factor
         ws['Z'+str(ActiveRow)].value = ws['CO'+str(ActiveRow)].value #Impulses/w or var hr
-        winsound.Beep(1000,1000)
         RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
+        winsound.Beep(40,750)
+        engine = pyttsx.init()
+        engine.setProperty('rate',121)
+        engine.say('Completed Row '+str(ActiveRow))
+        engine.runAndWait()
         ActiveRow = RowNumber
         if ws['A'+str(ActiveRow)].value==0: #Once reached end of Excel sheet.
             Finished=1
     updateGUI(wattBridgeGUI,ws)
+    winsound.Beep(40,750)
+    engine = pyttsx.init()
+    engine.setProperty('rate',121)
+    engine.say('Completed Collecting Data')
+    engine.runAndWait()
     wattBridgeGUI.WattBridgeEventsLog.AppendText("---Completed collecting/measuring Data sequence--- \n") #Update event log.
 def initialiseRadian():
     '''Resets the Instantaneous Data, Min Data and Max Data in the RD31.'''
