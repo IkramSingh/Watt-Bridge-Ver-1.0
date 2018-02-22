@@ -1,6 +1,7 @@
 import WattBridgeGUI 
 import Setup
 import StartNewSequence
+import StartNewSequenceQueryValidation
 import wx
 from openpyxl import Workbook
 from openpyxl import load_workbook
@@ -21,6 +22,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         WattBridgeGUI.WattBridgeSoftware.__init__(self,parent)
         self.setupSpreadsheet()
         print os.path.abspath(os.curdir)
+        self.SetupCompleted = False
     def CheckConnectionsOnButtonClick( self, event ):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
@@ -50,29 +52,40 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.RS232_6_WB.write("V0127\r")
         time.sleep(3)
         self.WattBridgeEventsLog.AppendText("Check and see if Watt Bridge has been set to W0721 & V0127. \n")
-        time.sleep(2)
+        StartNewSequence.updateGUI(frame,self.ws)
+        time.sleep(5)
         StartNewSequence.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequence class
+        StartNewSequenceQueryValidation.setInstruments(self.HP3458A_V,self.Ag53230A_V,self.FLUKE_V,self.rd31,self.HP3478A_V,self.RS232_6_WB) #Save Instrument objects in StartNewSequenceQueryValidation class
         self.initialiseCounter() #Initialise the Ag53230A_V Frequency Counter
         self.WattBridgeEventsLog.AppendText("If 4 instruments ID are shown as well as 3478A and Watt Bridge being set correcly, the all connections are successful. \n")
-        winsound.Beep(40,750)
-        engine = pyttsx.init()
-        engine.setProperty('rate',121)
-        engine.say('Completed Instrument Setup.')
-        engine.runAndWait()
-
+        StartNewSequence.textToVoice(frame,'Completed Instrument Setup')
+        frame.CurrentRow.SetValue(str(12)) #Safety command. Incase user presses 'Continue Sequence' before presses 'Start New Sequence'
+        self.SetupCompleted = True
     def WattBridgeSoftwareOnClose( self, event ):
         '''Closes all of the windows as well as Exists the Watt Bridge Software.'''
         self.Destroy()
     def ContinueSequenceOnButtonClick( self, event ):
         '''Recommences measuring from the current row.'''
-        currentRow = frame.CurrentRow.GetValue()
-        StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data)
+        if self.SetupCompleted == True:
+            if frame.QueryValidate.GetValue()==False:
+                currentRow = frame.CurrentRow.GetValue()
+                StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data)
+        else:
+            self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
+            StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
     def AboutOnMenuSelection( self, event ):
         '''Displays information about the software to the user in a seperate window.'''
         WattBridgeGUI.About(None).Show(True) #Displays information about the software.
     def StartNewSequenceOnButtonClick( self, event ):
         '''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''
-        StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data) #Start of startNewSequence in StartNewSequence.py
+        if self.SetupCompleted == True:
+            if frame.QueryValidate.GetValue()==True:
+                StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data)
+            else:
+                StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data) #Start of startNewSequence in StartNewSequence.py
+        else:
+            self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
+            StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
     def setupSpreadsheet(self):
         '''Creates a link between the software and Excel sheet.'''
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
@@ -116,10 +129,6 @@ app = wx.App(False)
 frame = WattBridge(None)
 #show the frame
 frame.Show(True) 
-winsound.Beep(40,750)
-engine = pyttsx.init()
-engine.setProperty('rate',121)
-engine.say(' Watt Bridge Version 1.0')
-engine.runAndWait()
+StartNewSequence.textToVoice(frame,' Watt Bridge Version 1.0')
 #start the applications
 app.MainLoop()

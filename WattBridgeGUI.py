@@ -142,9 +142,11 @@ class WattBridgeSoftware ( wx.Frame ):
 		self.ShuntVoltsTest = wx.CheckBox( self, wx.ID_ANY, u"Shunt Volts Test", wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer5.Add( self.ShuntVoltsTest, 0, wx.ALL, 5 )
 		
-## 		self.Channel1Filter = wx.CheckBox( self, wx.ID_ANY, u"Channel  1 Filter", wx.DefaultPosition, wx.DefaultSize, 0 )
-## 		fgSizer5.Add( self.Channel1Filter, 0, wx.ALL, 5 )
+		self.TextToVoice = wx.CheckBox( self, wx.ID_ANY, u"Text To Voice (adds 20sec to each reading)", wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer5.Add( self.TextToVoice, 0, wx.ALL, 5 )
 		
+                self.QueryValidate = wx.CheckBox( self, wx.ID_ANY, u"Query Validation", wx.DefaultPosition, wx.DefaultSize, 0 )
+                fgSizer5.Add( self.QueryValidate, 0, wx.ALL, 5 )
 		
 		fgSizer1.Add( fgSizer5, 1, wx.EXPAND|wx.ALIGN_BOTTOM, 5 )
 		

@@ -9,6 +9,8 @@ import xlwings as xw
 import wx
 import winsound
 import pyttsx
+import QueryValidate
+import datetime
 
 completedStartNewSequence=0
 #-----Instruments used in Watt Bridge Software-----#
@@ -70,9 +72,9 @@ ActiveRow=0
 lineCurrent = 0
 lineVolts = 0
 phase = 0
-
-def textToVoice(wattBridgeGUI,text):
-    if wattBridgeGUI.TextToVoice.GetValue()==True:
+TextToVoice = False
+def textToVoice(text):
+    if TextToVoice==True:
         winsound.Beep(40,750)
         engine = pyttsx.init()
         engine.setProperty('rate',121)
@@ -330,8 +332,15 @@ def setUpFFT():
     SampleTime = 9/(256*UncalFreqy)
     print("SampleTime: "+str(SampleTime))
     HP3458A_V.write("preset fast;mem fifo;mformat sint;oformat ascii") #Output to HP3458A_V with "preset fast" , ";mem fifo" , ";mformat sint" , ";oformat ascii", term.=LF
+    QueryValidate.QueryValidation(HP3458A_V, "MEM?", "2", 'setUpFFT')
+    QueryValidate.QueryValidation(HP3458A_V, "MFORMAT?", "2", 'setUpFFT')
+    QueryValidate.QueryValidation(HP3458A_V, "OFORMAT?", "1", 'setUpFFT')
     HP3458A_V.write("ssdc ;range 10;ssrc ext") #Output to HP3458A_V with "ssdc " , ";range 10" , ";ssrc ext", term.=LF
+    QueryValidate.QueryValidation(HP3458A_V, "RANGE?", "10", 'setUpFFT')
+    QueryValidate.QueryValidation(HP3458A_V, "SSRC?", "2", 'setUpFFT')
     HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
+    QueryValidate.QueryValidation(HP3458A_V, "DELAY?", "1e-03", 'setUpFFT')
+    QueryValidate.QueryValidation(HP3458A_V, "SWEEP?", str(SampleTime)+" , 256", 'setUpFFT')
     final = time.clock()
     print('SetupChannel: '+ str(final-start))
 
@@ -574,7 +583,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
     global NumberOfReadings,Finished,ReadingNumber,ACVoltsRms,UncalFreqy,FFTVolts,FFTPhase,RDPhase
     RowNumber=int(rowNumber)
     wattBridgeGUI.WattBridgeEventsLog.AppendText("Initiating Radian \n") #Update event log.
-    textToVoice(wattBridgeGUI,'Initiating Radian')
+    textToVoice('Initiating Radian')
     initialiseRadian() #Run Initialise Radian function. Must add later
     time.sleep(1) #Delay for 1 second
     Finished = 0 #End of process?
@@ -591,7 +600,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Reading: _ \n") #Update event log.
         ReadingNumber=1
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Applying Power \n") #Update event log.
-        textToVoice(wattBridgeGUI,'Applying power')
+        textToVoice('Applying power')
         ActiveRow=RowNumber
         Phase123Cell = ws['P'+str(ActiveRow)].value #Obtain phase value from Excel sheet
         if Phase123Cell==123 or Phase123Cell==0:
@@ -647,7 +656,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             print("SourceType selected in Excel file doesnt exist.")
         ActiveRow=7 #Set ActiveRow to 7.
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Finding Dial Settings \n") #Update event log.
-        textToVoice(wattBridgeGUI,'Finding Dial Settings')
+        textToVoice('Finding Dial Settings')
         findDialSettings(wattBridgeGUI,ws) #Execute Find Dial Settings
         refineDialSettings(wattBridgeGUI,ws) #Execute Refine Dial Settings
         ActiveRow=RowNumber
@@ -687,8 +696,10 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             if Ch1GateTimeCell>0.1:
                 if wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
                     Ag53230A_V.write(':SENS:FREQ:GATE:TIME ' + str(Ch1GateTimeCell)) #Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
-                    Ag53230A_V.write(":SENS:FUNC 'FREQ 1'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 1'", term.=LF
-                    Ag53230A_V.write(":INIT") #Output to Ag53230A_V with ":INIT", term.=LF
+                    QueryValidate.QueryValidation(Ag53230A_V, ":SENS:FREQ:GATE:TIME?", str(Ch1GateTimeCell), 'ContinueSequence')
+		    Ag53230A_V.write(":SENS:FUNC 'FREQ 1'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 1'", term.=LF
+                    QueryValidate.QueryValidation(Ag53230A_V, ":SENS:FUNC?", 'FREQ 1', 'ContinueSequence')
+		    Ag53230A_V.write(":INIT") #Output to Ag53230A_V with ":INIT", term.=LF
                     print("Counter chosen is 53230A")
                 elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==1:
                     #Output to HP3131A_V with ":sens:freq:arm:stop:tim " , Excel link, term.=LF
@@ -696,7 +707,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     #Output to HP3131A_V with "init", term.=LF
                     print("Counter chosen is 3131A")
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Collecting Swerlein Measurements \n") #Update event log.
-            textToVoice(wattBridgeGUI,'Collecting swerlein measurements')
+            textToVoice('Collecting swerlein measurements')
             start_2 = time.clock()
             ACVoltsRms = SwerleinFreq.run() #Obtain Ac volts rms value using Swerleins Algorithm
             final_2 = time.clock()
@@ -707,7 +718,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             ws['AB'+str(ActiveRow)].value=UncalFreqy #Set the exact frequency value in Excel sheet.
             setUpFFT() #Execute Set Up FFT Function
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Reference Phase \n") #Update event log.
-            textToVoice(wattBridgeGUI,'Reference phase')
+            textToVoice('Reference phase')
             setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
             ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the FFT ref phase value in Excel sheet.
@@ -721,17 +732,16 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
             RS232_6_WB.write("B33\r") #Output to RS232 6 WB with "B33", term.=CR, wait for completion?=1
             time.sleep(1)
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Detector volts and phase \n") #Update event log.
-            time.sleep(1)
-            textToVoice(wattBridgeGUI,'Detector volts and phase')
+            textToVoice('Detector volts and phase')
             print("Detector in session!!!!!")
             setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
             ws[getExcelColumn(33+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the Det volts value in Excel sheet.
             ws[getExcelColumn(34+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the Det phase value in Excel sheet.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Read RD31 \n") #Update event log.
-            textToVoice(wattBridgeGUI,'Read R,D,31')
+            textToVoice('Read R,D,31')
             readRadian2(ReadingNumber,wsRS31Data) #Execute Read Radian2 function.
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Counter \n") #Update event log.
-            textToVoice(wattBridgeGUI,'Counter')
+            textToVoice('Counter')
             start_5 = time.clock()
             GateTime = Ch1GateTimeCell
             if GateTime>0.1:
@@ -757,8 +767,10 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                         ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)].value=HP3131A_V
                     elif wattBridgeGUI.SelectCounter.GetCurrentSelection()==0:
                         Ag53230A_V.write(':SENS:FREQ:GATE:TIME '+str(GateTime))#Output to Ag53230A_V with ":SENS:FREQ:GATE:TIME " , Excel link, term.=LF
-                        Ag53230A_V.write(":SENS:FUNC 'FREQ 2'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 2'", term.=LF
-                        output = Ag53230A_V.write(':read?') #Output to Ag53230A_V with ":read?", term.=LF
+                        QueryValidate.QueryValidation(Ag53230A_V, ":SENS:FREQ:GATE:TIME?", str(GateTime), 'ContinueSequence')
+			Ag53230A_V.write(":SENS:FUNC 'FREQ 2'") #Output to Ag53230A_V with ":SENS:FUNC 'FREQ 2'", term.=LF
+                        QueryValidate.QueryValidation(Ag53230A_V, ":SENS:FUNC?", 'FREQ 2', 'ContinueSequence')
+			output = Ag53230A_V.write(':read?') #Output to Ag53230A_V with ":read?", term.=LF
                         time.sleep(2) #Delay for 2 seconds
                         #Enter from Ag53230A_V up to 256 bytes, stop on EOS=LF
                         ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)].value = float(output)
@@ -786,9 +798,9 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
                     ws[getExcelColumn(39+7*(ReadingNumber-1))+str(ActiveRow)].value=RD31Total
             final_5 = time.clock()
             print("Counter reading time: " + str(final_5-start_5))
-            textToVoice(wattBridgeGUI,'Completed Reading '+str(ReadingNumber))
+            textToVoice('Completed Reading '+str(ReadingNumber))
             time.sleep(0.2)
-            textToVoice(wattBridgeGUI,'in row '+str(ActiveRow))
+            textToVoice('in row '+str(ActiveRow))
             final = time.clock()
             print('Reading time: '+ str(final-start))
         #Execute Read Radian all Data !!!Not needed function!!!
@@ -814,7 +826,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         RS232_6_WB.write("B01\r") #Output to RS232 6 WB with "B01", term.=CR, wait for completion?=1
         time.sleep(1)
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Calculating Results \n")
-        textToVoice(wattBridgeGUI,'Calculating Results')
+        textToVoice('Calculating Results')
         updateGUI(wattBridgeGUI,ws)
         time.sleep(2) #Delay for 2 second
         pasteResults(ws) #Execute Paste Results function
@@ -828,12 +840,12 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         ws['Y'+str(ActiveRow)].value = ws['CJ'+str(ActiveRow)].value #Coverage Factor
         ws['Z'+str(ActiveRow)].value = ws['CO'+str(ActiveRow)].value #Impulses/w or var hr
         RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
-        textToVoice(wattBridgeGUI,'Completed Row '+str(ActiveRow))
+        textToVoice('Completed Row '+str(ActiveRow))
         ActiveRow = RowNumber
         if ws['A'+str(ActiveRow)].value==0: #Once reached end of Excel sheet.
             Finished=1
     updateGUI(wattBridgeGUI,ws)
-    textToVoice(wattBridgeGUI,'Completed Collecting Data')
+    textToVoice('Completed Collecting Data')
     wattBridgeGUI.WattBridgeEventsLog.AppendText("---Completed collecting/measuring Data sequence--- \n") #Update event log.
     final_whole = time.clock()
     print("whole sequence time: " + str(final_whole-start_whole))
@@ -919,6 +931,8 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     updateGUI(wattBridgeGUI,ws)
+    queryFile = open('QueryValidation ' + str(datetime.datetime.now().strftime("%y-%m-%d"))+'.txt', 'a')
+    queryFile.close()
     continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data)
 ##     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,ws,))
 ##     t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
