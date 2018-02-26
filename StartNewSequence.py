@@ -9,6 +9,8 @@ import xlwings as xw
 import wx
 import winsound
 import pyttsx
+import sys
+import win32com.client as win32
 
 completedStartNewSequence=0
 #-----Instruments used in Watt Bridge Software-----#
@@ -71,7 +73,22 @@ lineCurrent = 0
 lineVolts = 0
 phase = 0
 
+def immediateShutDown():
+    '''Turns off the power supply for emergency purposes. Such as if an error were to occur.'''
+    FLUKE_V.write("OUTP:STAT OFF")
+
+def emailMessage(subject, message):
+    '''Send an email to recipients if any error were to occur or when the data sequence has finished its measurements.'''
+    outlook = win32.Dispatch('Outlook.application')
+    mail = outlook.CreateItem(0)
+    mail.To = 'tom.stewart@callaghaninnovation.govt.nz'
+    mail.CC = 'ikram.singh@callaghaninnovation.govt.nz'
+    mail.Subject = subject
+    mail.Body = message+' \n\n\n\n\nKind Regards, \nWatt Bridge Computer \nEmail generated using Python'
+    mail.Send()
+
 def textToVoice(wattBridgeGUI,text):
+    '''Computer speaks the stage that the software is currently in. Can be enable/disabled by the user in GUI.'''
     if wattBridgeGUI.TextToVoice.GetValue()==True:
         winsound.Beep(40,750)
         engine = pyttsx.init()
@@ -80,11 +97,13 @@ def textToVoice(wattBridgeGUI,text):
         engine.runAndWait()
 
 def getExcelColumn(column):
+    '''Returns the character(s) for the excel column number (i.e. Converts column Integer to Alpha)'''
     columnCharacter = str(xlsxwriter.utility.xl_col_to_name(column-1))
     return columnCharacter
 
 def setupChanel(wattBridgeGUI):
-    '''Sends various commands to the FLUKE power supply.'''
+    '''Sends various commands to the FLUKE power supply. Checks to see if the fittings are placed properly.
+    Sets the FLUKE power supply to the appropriate DC offset and phase values.'''
     start = time.clock()
     FLUKE_V.write("SOUR:PHAS" +str(Chanel)+":FITT?") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":FITT?", term.=LF
     time.sleep(0.5) #Delay for 0.5 seconds
@@ -93,7 +112,9 @@ def setupChanel(wattBridgeGUI):
     PhaseOn = FLUKE_V.read()
     if PhaseOn==0:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: One of the phases you have tried turn on is not fitted \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', 'Cause error: One of the phases you have tried turn on is not fitted')
+        immediateShutDown()
+        sys.exit()
         time.sleep(1)
     if SourceType == "FLUHIGH":
         FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:FITT?") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:FITT?", term.=LF
@@ -102,7 +123,9 @@ def setupChanel(wattBridgeGUI):
         AmpFitted = FLUKE_V.read()
         if AmpFitted==0:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: A 52120A unit is not fitted to the phase you have selected \n") #Update event log.
-            return
+            emailMessage('Watt Bridge Error', "Cause error: A 52120A unit is not fitted to the phase you have selected \n")
+            immediateShutDown()
+            sys.exit()
         if wattBridgeGUI.OutputAutoHigh.GetCurrentSelection()==0:
             FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:EAMP:TERM:MODE AUTO") #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:EAMP:TERM:MODE AUTO", term.=LF
             print("AUTO")
@@ -113,7 +136,9 @@ def setupChanel(wattBridgeGUI):
     else:
         if SetAmpsCell>21:
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: You have selected a current value above 21A, please use the FLUHIGH source in Excel and retry \n") #Update event log.
-            return
+            emailMessage('Watt Bridge Error', "Cause error: You have selected a current value above 21A, please use the FLUHIGH source in Excel and retry \n")
+            immediateShutDown()
+            sys.exit()
         FLUKE_V.write("SOUR:PHAS" +str(Chanel)+ ":CURR:RANG " +str(IRangeLow)+ "," +str(IRangeHigh)) #Output to FLUKE_V with "SOUR:PHAS" , Chanel , ":CURR:RANG " , I RangeLow , "," , I RangeHigh, term.=LF
     FLUKE_V.write("UNIT:MHAR:CURR ABS") #Output to FLUKE_V with "UNIT:MHAR:CURR ABS", term.=LF
     FLUKE_V.write("UNIT:MHAR:VOLT ABS") #Output to FLUKE_V with "UNIT:MHAR:VOLT ABS", term.=LF
@@ -139,17 +164,20 @@ def setPhases():
             Sum = SetPhaseCell+360
             SetPhaseCell = Sum
 def powerFluke(wattBridgeGUI,ws):
-    '''Checks to see if the settings being sent to the FLUKE power supply are suitable.'''
+    '''Checks to see if the settings being sent to the FLUKE power supply are suitable. Selects
+    values for the DC offsets and phase values for the appropriate input ranges.'''
     start = time.clock()
     global SetVoltsCell,SetPhaseCell,SetAmpsCell,SetFrequencyCell,VRangeHigh,DCVoltageOffset
     global HighCurrentRange,DCCurrentOffset,IRangeLow,IRangeHigh,Chanel,SetVoltsPhase,FlukeErrorNumber
-    global flukeError
+    global flukeError,SetVoltsPhase 
     FLUKE_V.write("*CLS") #Output to FLUKE_V with "*CLS", term.=LF
     FLUKE_V.write("*RST") #Output to FLUKE_V with "*RST", term.=LF
     FLUKE_V.write("OUTP:SENS 0") #Output to FLUKE_V with "OUTP:SENS 0", term.=LF
     if wattBridgeGUI.Flukeramp.GetValue()<2:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Error message: Ramp time less than 2 seconds \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', "Error message: Ramp time less than 2 seconds \n")
+        immediateShutDown()
+        sys.exit()
     FLUKE_V.write("OUTP:RAMP:TIME "+str(wattBridgeGUI.Flukeramp.GetValue())) #Output to FLUKE_V with "OUTP:RAMP:TIME " , Fluke Ramp (s), term.=LF
     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
@@ -158,13 +186,19 @@ def powerFluke(wattBridgeGUI,ws):
     SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
     if SetVoltsCell>1008:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage value out of range \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', "Cause error: Voltage value out of range \n")
+        immediateShutDown()
+        sys.exit()
     if SetVoltsCell>250:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Voltage selected is above 250V \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', "Cause error: Voltage selected is above 250V \n")
+        immediateShutDown()
+        sys.exit()
     if SetAmpsCell>120:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Current value out of range \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', "Cause error: Current value out of range \n")
+        immediateShutDown()
+        sys.exit()
     #Specific cases for SetVoltsCell
     if 0 <= SetVoltsCell <= 22.9:
         VRangeHigh=23
@@ -190,13 +224,13 @@ def powerFluke(wattBridgeGUI,ws):
     if SourceType=="FLUHIGH":
         if 0 <= SetAmpsCell <= 1.999:
             HighCurrentRange=2
-            DCCurrentOffset=-0.000173
+            DCCurrentOffset=-0.0001
         elif 1.999 <= SetAmpsCell <= 19.99:
             HighCurrentRange=20
-            DCCurrentOffset=-0.00195
+            DCCurrentOffset=-0.001027
         elif 19.99 <= SetAmpsCell <= 120:
             HighCurrentRange=120
-            DCCurrentOffset=0.006345
+            DCCurrentOffset=0.000254
     else:
         if 0 <= SetAmpsCell <= 0.249:
             IRangeLow=0.05
@@ -255,54 +289,58 @@ def powerFluke(wattBridgeGUI,ws):
         if FlukeErrorNumber!=0: #If/Then Fluke error with x=Fluke Error number
             VectorIndex = flukeError[1]#Calculate Vector Index with v=Fluke Error i=1
             wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: " + str(VectorIndex)+ "\n") #Update event log. #Cause error General Error code=20010, text=Vector Index
-            return
+            emailMessage('Watt Bridge Error', "Cause error: " + str(VectorIndex)+ "\n")
+            immediateShutDown()
+            sys.exit()
     FLUKE_V.write("OUTP:STAT ON")#Output to FLUKE_V with "OUTP:STAT ON", term.=LF
     time.sleep(float(wattBridgeGUI.Flukeramp.GetValue())) #Delay for Fluke Ramp (s) seconds
-    FLUKE_V.write("OUTP")#Output to FLUKE_V with "OUTP:STAT?", term.=LF
+    FLUKE_V.write("OUTP:STAT?")#Output to FLUKE_V with "OUTP:STAT?", term.=LF
     #Enter from FLUKE_V up to 256 bytes, stop on EOS=LF
-    isFlukeOff = FLUKE_V.query(":STAT?") #Store in Is Fluke Off from FLUKE_V
+    isFlukeOff = FLUKE_V.read() #Store in Is Fluke Off from FLUKE_V
     time.sleep(0.5) #Delay for 0.5 seconds
     if isFlukeOff < 0.5: #If/Then Fluke not On with x=Is Fluke Off
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Power output unsuccessful. Check connections. \n") #Update event log. 
-        return
-    time.sleep(7) #Delay for 12 seconds
+        emailMessage('Watt Bridge Error', "Cause error: Power output unsuccessful. Check connections. \n")
+        immediateShutDown()
+        sys.exit()
+    time.sleep(12) #Delay for 12 seconds
     final = time.clock()
     print('PowerFluke time: '+ str(final-start))
-def powerCH5500(ws):
-    global CHType
-    CHType = ws['B7'].value #Obtain CHType
-    #Clear CH5500_V
-    if CHType<99:
-        #Clear CH5050_V
-        #Output to CH5050_V with "S" , "I", term.=LF
-        print("CHType < 99")
-    #Output to CH5500_V with "S", term.=LF
-    SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
-    SetVolts=0
-    if 9 <CHType< 12:
-        SetVolts = SetVoltsCell/2.497
-        #Output to CH5500_V with "O" , 0, term.=LF
-    else:
-        SetVolts = SetVoltsCell/1
-        #Output to CH5500_V with "O" , 180, term.=LF
-    #Output to CH5500_V with "R" , Set volts, term.=LF
-    SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
-    if SetAmpsCell<0:
-        #Output to CH5500_V with "O" , 0, term.=LF
-        print('SetAmpsCell<0')
-    Absolutevalue = abs(SetAmpsCell)
-    #Output to CH5500_V with "V" , Absolute value, term.=LF
-    SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
-    #Output to CH5500_V with "P" , SetPhaseCell, term.=LF
-    SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
-    #Output to CH5500_V with "F" , SetFrequencyCell, term.=LF
-    #Output to CH5500_V with "N", term.=LF
-    if CHType<99:
-        #Output to CH5050_V with "N", term.=LF
-        #Output to CH5500_V with "N", term.=LF
-        #Output to CH5050_V with "O", term.=LF
-        print('CHType<99')
-    time.sleep(60) #Delay for 60 seconds
+## def powerCH5500(ws):
+##     global CHType
+##     CHType = ws['B7'].value #Obtain CHType
+##     #Clear CH5500_V
+##     if CHType<99:
+##         #Clear CH5050_V
+##         #Output to CH5050_V with "S" , "I", term.=LF
+##         print("CHType < 99")
+##     #Output to CH5500_V with "S", term.=LF
+##     SetVoltsCell = ws['D'+str(ActiveRow)].value #Obtain set voltage value from Excel Sheet
+##     SetVolts=0
+##     if 9 <CHType< 12:
+##         SetVolts = SetVoltsCell/2.497
+##         #Output to CH5500_V with "O" , 0, term.=LF
+##     else:
+##         SetVolts = SetVoltsCell/1
+##         #Output to CH5500_V with "O" , 180, term.=LF
+##     #Output to CH5500_V with "R" , Set volts, term.=LF
+##     SetAmpsCell = ws['C'+str(ActiveRow)].value #Obtain set amps value from Excel Sheet
+##     if SetAmpsCell<0:
+##         #Output to CH5500_V with "O" , 0, term.=LF
+##         print('SetAmpsCell<0')
+##     Absolutevalue = abs(SetAmpsCell)
+##     #Output to CH5500_V with "V" , Absolute value, term.=LF
+##     SetPhaseCell = ws['E'+str(ActiveRow)].value #Obtain set phase value from Excel Sheet
+##     #Output to CH5500_V with "P" , SetPhaseCell, term.=LF
+##     SetFrequencyCell = ws['I'+str(ActiveRow)].value #Obtain set frequency value from Excel Sheet
+##     #Output to CH5500_V with "F" , SetFrequencyCell, term.=LF
+##     #Output to CH5500_V with "N", term.=LF
+##     if CHType<99:
+##         #Output to CH5050_V with "N", term.=LF
+##         #Output to CH5500_V with "N", term.=LF
+##         #Output to CH5050_V with "O", term.=LF
+##         print('CHType<99')
+##     time.sleep(60) #Delay for 60 seconds
 
 def setUpFFTVoltsAndPhase(ws):
     '''Calculates the Fast Fourier Transform (both magnitude and phase vectors) of the data from the 3458A.
@@ -321,6 +359,7 @@ def setUpFFTVoltsAndPhase(ws):
     FFTPhase = PhaseVector[9]*180.0/(np.pi) #Calculate FFT Phase with n=9 V=PhaseVector
     final = time.clock()
     print('setupVoltsAndPhase time: '+ str(final-start))
+    time.sleep(2)
 def setUpFFT():
     '''Calculates the SampleTime which is dependent on the frequency obtain through Swerleins Algorithm'''
     global SampleTime, UncalFreqy
@@ -334,7 +373,7 @@ def setUpFFT():
     HP3458A_V.write(";delay 1e-03;sweep "+str(SampleTime)+" , 256") #Output to HP3458A_V with ";delay 1e-03" , ";sweep " , Sample Time , "," , 256, term.=LF
     final = time.clock()
     print('SetupChannel: '+ str(final-start))
-
+    time.sleep(2)
 def findDialSettings(wattBridgeGUI,ws):
     '''Obtains the Dial setting from the Excel sheet and executes the setUpFFT 
     and setUpFFTVoltsAndPhase functions. The GUI gets updated at the same time.'''
@@ -356,7 +395,9 @@ def findDialSettings(wattBridgeGUI,ws):
     setUpFFTVoltsAndPhase(ws) #Execute FFT Volts & Phase function
     if FFTVolts<0.7:
         wattBridgeGUI.WattBridgeEventsLog.AppendText("Cause error: Source Voltage Error \n") #Update event log.
-        return
+        emailMessage('Watt Bridge Error', "Cause error: Source Voltage Error \n")
+        immediateShutDown()
+        sys.exit()
     ws[getExcelColumn(36+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTVolts #Set the FFT ref volts value in Excel sheet.
     ws[getExcelColumn(37+7*(ReadingNumber-1))+str(ActiveRow)].value=FFTPhase #Set the FFT ref phase value in Excel sheet.
     #Output to RS232 6 WB with "DD", term.=CR, wait for completion?=1
@@ -566,7 +607,7 @@ def pasteResults(ws):
         ws['C'+newColumn+str(ActiveRow)].value = Result
     final = time.clock()
     print('pasteResults time: '+ str(final-start))
-def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
+def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data,wb):
     '''The core of the software. Contains all of the commands and function execution commands that performs
     all of the necessary measurements and calculations.'''
     start_whole = time.clock()
@@ -649,7 +690,7 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         SourceType = ws['B'+str(ActiveRow)].value #Get the Source Type from Excel sheet.
         print("SourceType: "+str(SourceType))
         if SourceType=="FLUKE" or SourceType=="FLUHIGH":
-            print("FLUKE")
+            print("FLUKE/FLUHIGH")
             powerFluke(wattBridgeGUI,ws) #Execute powerFluke function.
         elif SourceType=="CH":
             print("CH5500")
@@ -844,13 +885,15 @@ def continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data):
         RowNumber=RowNumber+1 #Increment to the next Row in excel sheet.
         textToVoice(wattBridgeGUI,'Completed Row '+str(ActiveRow))
         ActiveRow = RowNumber
+        wb.save()
         if ws['A'+str(ActiveRow)].value==0: #Once reached end of Excel sheet.
             Finished=1
     updateGUI(wattBridgeGUI,ws)
     textToVoice(wattBridgeGUI,'Completed Collecting Data')
     wattBridgeGUI.WattBridgeEventsLog.AppendText("---Completed collecting/measuring Data sequence--- \n") #Update event log.
+    emailMessage('Watt Bridge Data Collection Completed', "Completed collecting Data Set. \n")
     final_whole = time.clock()
-    print("whole sequence time: " + str(final_whole-start_whole))
+    print("Whole sequence time: " + str(final_whole-start_whole))
 def initialiseRadian():
     '''Resets the Instantaneous Data, Min Data and Max Data in the RD31.'''
     #Call RD Assign Device with 7,Prog Radian ID. This process is already done in the 'CheckConnections' function
@@ -922,7 +965,7 @@ def updateGUI(wattBridgeGUI,ws):
     wattBridgeGUI.VCount.SetValue(str(VCount)) #Display the V Count value
     wattBridgeGUI.ActualFrequency.SetValue(str(UncalFreqy)) #Display the Frequency value
     print("GUI updated")
-def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
+def startNewSequence(wattBridgeGUI,ws,wsRS31Data,wb):
     '''startNewSequence function is executed when user presses the "Start New Sequence (from "Start Row")".
     Leads onto continueSequence function. Contains 2 threads so that the "continueSequence" and "updateGUI"
     functions are executing simultaneously for the Suser.'''
@@ -933,7 +976,7 @@ def startNewSequence(wattBridgeGUI,ws,wsRS31Data):
     rowNumber = wattBridgeGUI.StartRow.GetValue() #Row number in excel sheet.
     RowNumber = rowNumber
     updateGUI(wattBridgeGUI,ws)
-    continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data)
+    continueSequence(wattBridgeGUI,rowNumber,ws,wsRS31Data,wb)
 ##     t1=threading.Thread(target=updateGUI,args=(wattBridgeGUI,ws,))
 ##     t2=threading.Thread(target=continueSequence,args=(wattBridgeGUI,rowNumber,ws,wsRS31Data,))
 ##     t1.start()

@@ -149,10 +149,12 @@ class RD31 (meterbase.MeterBase):
         self._send_packet(0x32,0,outdata)
         
     def set_port_pulse_output(self, BNCCode, BNCData, PhaseCode):
+        '''Sets the output port value of the RD31 as well as what input(s) this port should be using.'''
         outdata = pack (">BBB", BNCCode, BNCData, PhaseCode)
         self._send_packet(0x1D,0,outdata)
         
     def _get_metric (self, function):
+        '''Obtains the metric vlaues (e.g. Watts, Vars, Volts, Amps etc) from the RD31.'''
         outdata = pack (">HH", function, 0xfffd)
         indata = self.ask (0x2E, 0, outdata)
         (dataA, dataB, dataC, dataNeutral, dataNet) = unpack (">IIIII", indata)

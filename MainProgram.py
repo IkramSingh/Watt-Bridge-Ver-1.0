@@ -23,6 +23,9 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.setupSpreadsheet()
         print os.path.abspath(os.curdir)
         self.SetupCompleted = False
+    def MakeSafeOnButtonClick( self, event ):
+        '''Immediately turns off the main power supply. FLUKE in this case.'''
+        self.FLUKE_V.write("OUTP:STAT OFF")
     def CheckConnectionsOnButtonClick( self, event ):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
@@ -69,7 +72,8 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         if self.SetupCompleted == True:
             if frame.QueryValidate.GetValue()==False:
                 currentRow = frame.CurrentRow.GetValue()
-                StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data)
+                StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data,self.wb)
+                self.wb.save()
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
@@ -80,9 +84,10 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''
         if self.SetupCompleted == True:
             if frame.QueryValidate.GetValue()==True:
-                StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data)
+                StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb)
             else:
-                StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data) #Start of startNewSequence in StartNewSequence.py
+                StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb) #Start of startNewSequence in StartNewSequence.py
+                self.wb.save()
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
@@ -90,11 +95,11 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Creates a link between the software and Excel sheet.'''
         self.WattBridgeEventsLog.AppendText("Setting Up Spreadsheet and creating user interface...\n") #Inform the user.
         print("Setting Up Spreadsheet and creating user interface...\n")
-        self.filename="Pb_Auto_V1ai GM_V1q.xlsm" #Excel filename
+        self.filename="Pb_Auto_V1ai Gm_V1q.xlsm" #Excel filename
         self.wb = xw.Book(self.filename)
         #self.wb=load_workbook(self.filename, read_only=False, keep_vba=True) #Open Excel file
-        self.ws=self.wb.sheets[0] #Make it active to work in
-        self.wsRS31Data = self.wb.sheets[1] #Second worksheet titled "RD31 Data"
+        self.ws=self.wb.sheets['Data'] #Make it active to work in
+        self.wsRS31Data = self.wb.sheets['RD31 Data'] #Second worksheet titled "RD31 Data"
         print("Spreadsheet setup successfully \n")
         self.WattBridgeEventsLog.AppendText("Spreadsheet setup successfully \n")#Inform the user.
     def initialiseCounter(self):
