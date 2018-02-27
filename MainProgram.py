@@ -25,7 +25,8 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         self.SetupCompleted = False
     def MakeSafeOnButtonClick( self, event ):
         '''Immediately turns off the main power supply. FLUKE in this case.'''
-        self.FLUKE_V.write("OUTP:STAT OFF")
+        if self.SetupCompleted==True:
+            self.FLUKE_V.write("OUTP:STAT OFF")
     def CheckConnectionsOnButtonClick( self, event ):
         '''Creates communication links between Watt Bridge software and all of the machines
         as well as checking to see if the communication links are successful'''
@@ -71,9 +72,13 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Recommences measuring from the current row.'''
         if self.SetupCompleted == True:
             if frame.QueryValidate.GetValue()==False:
-                currentRow = frame.CurrentRow.GetValue()
-                StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data,self.wb)
-                self.wb.save()
+                try:
+                    currentRow = frame.CurrentRow.GetValue()
+                    StartNewSequence.continueSequence(frame,currentRow,self.ws,self.wsRS31Data,self.wb)
+                    self.wb.save()
+                except:
+                    self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
@@ -84,10 +89,18 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
         '''Start a new sequence when user presses the "Start New Sequence (from "Start Row")" button.'''
         if self.SetupCompleted == True:
             if frame.QueryValidate.GetValue()==True:
-                StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb)
+                try:
+                    StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb)
+                except:
+                    self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
             else:
-                StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb) #Start of startNewSequence in StartNewSequence.py
-                self.wb.save()
+                try:
+                    StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb) #Start of startNewSequence in StartNewSequence.py
+                    self.wb.save()
+                except:
+                    self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')

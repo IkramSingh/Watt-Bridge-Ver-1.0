@@ -67,7 +67,8 @@ class RD31AutocalError (Exception):
         return "RD-31 Autocal Error on Channel %d" % self.channel
 
 class RD31 (meterbase.MeterBase):
-    
+    '''Class used to create a communication link to the RD31 Three Phase instrument. Also contains all of the required 
+    functions to obtain information from the RD31 as well as sending information to the RD31.'''
     # Initilisation and clean-up routines
     def __init__ (self, port="COM10"):
         self.port = serial.Serial (port, 57600)

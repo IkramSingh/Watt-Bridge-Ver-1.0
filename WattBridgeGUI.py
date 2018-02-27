@@ -162,7 +162,7 @@ class WattBridgeSoftware ( wx.Frame ):
         
         Ch1TrigLevelChoices = [ u"TTL (3 V)", u"6 V" ]
         self.Ch1TrigLevel = wx.ComboBox( self, wx.ID_ANY, u"6 V", wx.DefaultPosition, wx.DefaultSize, Ch1TrigLevelChoices, 0 )
-        self.Ch1TrigLevel.SetSelection( 0 )
+        self.Ch1TrigLevel.SetSelection( 1 )
         fgSizer6.Add( self.Ch1TrigLevel, 0, wx.ALL, 5 )
         
         self.Ch2TrigLevel = wx.StaticText( self, wx.ID_ANY, u"Ch 2 Trig Level", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -216,7 +216,7 @@ class WattBridgeSoftware ( wx.Frame ):
         
         OutputAutoHighChoices = [ u"AUTO", u"HIGH" ]
         self.OutputAutoHigh = wx.ComboBox( self, wx.ID_ANY, u"HIGH", wx.DefaultPosition, wx.DefaultSize, OutputAutoHighChoices, 0 )
-        self.OutputAutoHigh.SetSelection( 0 )
+        self.OutputAutoHigh.SetSelection( 1 )
         fgSizer6.Add( self.OutputAutoHigh, 0, wx.ALL, 5 )
         
         self.Channel1Filter = wx.StaticText( self, wx.ID_ANY, u"Channel 1 Filter", wx.DefaultPosition, wx.DefaultSize, 0 )
