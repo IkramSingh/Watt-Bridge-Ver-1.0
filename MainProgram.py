@@ -78,7 +78,7 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
                     self.wb.save()
                 except:
                     self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
-                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'If no error came back before this email, then the Spreadsheet has been tampered with while process was running.')
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
@@ -93,14 +93,14 @@ class WattBridge(WattBridgeGUI.WattBridgeSoftware):
                     StartNewSequenceQueryValidation.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb)
                 except:
                     self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
-                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'If no error came back before this email, then the Spreadsheet has been tampered with while process was running.')
             else:
                 try:
                     StartNewSequence.startNewSequence(frame,self.ws,self.wsRS31Data,self.wb) #Start of startNewSequence in StartNewSequence.py
                     self.wb.save()
                 except:
                     self.FLUKE_V.write("OUTP:STAT OFF") #Turn off power supply immdiately
-                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'Spreadsheet has been tampered with while process was running.')
+                    StartNewSequence.emailMessage('Watt Bridge Excel Error', 'If no error came back before this email, then the Spreadsheet has been tampered with while process was running.')
         else:
             self.WattBridgeEventsLog.AppendText("Intruments have not been setup yet. \n")
             StartNewSequence.textToVoice(frame,'Intruments have not been setup yet')
